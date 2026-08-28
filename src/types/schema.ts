@@ -94,9 +94,16 @@ export interface MediaOverlay {
   src: string; // image or video path
   startFrame: number;
   durationInFrames: number;
-  type: "image" | "video" | "screenshot";
-  position?: "center" | "pip" | "full";
+  type?: "image" | "video" | "screenshot";
+  position?: "top-right" | "top-left" | "center" | "bottom-right" | "bottom-left" | "pip" | "full";
+  top?: number | string;
+  right?: number | string;
+  left?: number | string;
+  bottom?: number | string;
+  width?: number | string;
+  height?: number | string;
   borderRadius?: number;
+  label?: string;
 }
 
 export interface SFXEvent {

@@ -198,7 +198,7 @@ export const ReelComposition: React.FC<ReelProps> = ({
         </AbsoluteFill>
       )}
 
-      {/* 2. Media / B-roll Overlays Layer */}
+      {/* 2. Media / B-roll Overlays Layer & Visual Stickers */}
       {mediaOverlays.map((media) => {
         const isMediaActive =
           frame >= media.startFrame &&
@@ -208,48 +208,126 @@ export const ReelComposition: React.FC<ReelProps> = ({
         const mediaSpring = spring({
           frame: frame - media.startFrame,
           fps,
-          config: { damping: 14, mass: 0.5, stiffness: 180 },
+          config: { damping: 12, mass: 0.4, stiffness: 200 },
         });
 
+        // Compute positioning styles
+        const isPip = media.position === "top-right" || media.position === "top-left" || media.position === "bottom-right" || media.position === "bottom-left" || media.top !== undefined || media.right !== undefined;
+        
+        let positionStyle: React.CSSProperties = {
+          position: "absolute",
+          zIndex: 35,
+          opacity: interpolate(mediaSpring, [0, 1], [0, 1]),
+          transform: `scale(${interpolate(mediaSpring, [0, 1], [0.8, 1])}) rotate(${interpolate(mediaSpring, [0, 1], [-8, 0])}deg)`,
+        };
+
+        if (media.position === "top-right" || (!media.position && media.right !== undefined)) {
+          positionStyle = {
+            ...positionStyle,
+            top: media.top ?? "14%",
+            right: media.right ?? "6%",
+            width: media.width ?? 320,
+          };
+        } else if (media.position === "top-left" || (!media.position && media.left !== undefined)) {
+          positionStyle = {
+            ...positionStyle,
+            top: media.top ?? "14%",
+            left: media.left ?? "6%",
+            width: media.width ?? 320,
+          };
+        } else if (media.position === "bottom-right") {
+          positionStyle = {
+            ...positionStyle,
+            bottom: media.bottom ?? "20%",
+            right: media.right ?? "6%",
+            width: media.width ?? 300,
+          };
+        } else {
+          // Centered full overlay
+          return (
+            <AbsoluteFill
+              key={media.id}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                padding: 40,
+                opacity: interpolate(mediaSpring, [0, 1], [0, 1]),
+                transform: `scale(${interpolate(mediaSpring, [0, 1], [0.9, 1])})`,
+                zIndex: 30,
+              }}
+            >
+              {media.type === "video" ? (
+                <OffthreadVideo
+                  src={resolveMediaSrc(media.src)}
+                  style={{
+                    width: "90%",
+                    maxHeight: "70%",
+                    borderRadius: media.borderRadius || 24,
+                    boxShadow: "0 20px 60px rgba(0,0,0,0.8)",
+                    border: "2px solid rgba(255,255,255,0.2)",
+                    objectFit: "contain",
+                  }}
+                />
+              ) : (
+                <Img
+                  src={resolveMediaSrc(media.src)}
+                  style={{
+                    width: "90%",
+                    maxHeight: "70%",
+                    borderRadius: media.borderRadius || 24,
+                    boxShadow: "0 20px 60px rgba(0,0,0,0.8)",
+                    border: "2px solid rgba(255,255,255,0.2)",
+                    objectFit: "contain",
+                  }}
+                />
+              )}
+            </AbsoluteFill>
+          );
+        }
+
         return (
-          <AbsoluteFill
-            key={media.id}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              padding: 40,
-              opacity: interpolate(mediaSpring, [0, 1], [0, 1]),
-              transform: `scale(${interpolate(mediaSpring, [0, 1], [0.9, 1])})`,
-              zIndex: 30,
-            }}
-          >
-            {media.type === "video" ? (
-              <OffthreadVideo
-                src={media.src}
-                style={{
-                  width: "90%",
-                  maxHeight: "70%",
-                  borderRadius: media.borderRadius || 24,
-                  boxShadow: "0 20px 60px rgba(0,0,0,0.8)",
-                  border: "2px solid rgba(255,255,255,0.2)",
-                  objectFit: "contain",
-                }}
-              />
-            ) : (
+          <div key={media.id} style={positionStyle}>
+            <div
+              style={{
+                position: "relative",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                filter: "drop-shadow(0 15px 35px rgba(0, 0, 0, 0.7))",
+              }}
+            >
               <Img
-                src={media.src}
+                src={resolveMediaSrc(media.src)}
                 style={{
-                  width: "90%",
-                  maxHeight: "70%",
+                  width: "100%",
+                  height: "auto",
                   borderRadius: media.borderRadius || 24,
-                  boxShadow: "0 20px 60px rgba(0,0,0,0.8)",
-                  border: "2px solid rgba(255,255,255,0.2)",
                   objectFit: "contain",
                 }}
               />
-            )}
-          </AbsoluteFill>
+              {media.label && (
+                <div
+                  style={{
+                    marginTop: 10,
+                    padding: "6px 16px",
+                    background: "rgba(15, 23, 42, 0.85)",
+                    backdropFilter: "blur(12px)",
+                    borderRadius: 14,
+                    border: "1px solid rgba(255, 230, 0, 0.4)",
+                    color: "#FFE600",
+                    fontSize: 22,
+                    fontWeight: 800,
+                    fontFamily: "'Cairo', 'Tajawal', sans-serif",
+                    textAlign: "center",
+                    boxShadow: "0 4px 15px rgba(0,0,0,0.5)",
+                  }}
+                >
+                  {media.label}
+                </div>
+              )}
+            </div>
+          </div>
         );
       })}
 
