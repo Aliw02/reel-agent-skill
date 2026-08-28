@@ -1,0 +1,30 @@
+{
+  "name": "reel-agent-skill",
+  "version": "1.0.0",
+  "description": "Automated AI Video Editor for Reels and TikTok using Remotion and Whisper",
+  "scripts": {
+    "start": "remotion preview src/index.ts",
+    "build": "remotion render src/index.ts ReelComposition out/final_reel.mp4"
+  },
+  "dependencies": {
+    "@remotion/cli": "^4.0.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "remotion": "^4.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.0",
+    "typescript": "^5.0.0"
+  },
+  "keywords": [
+    "remotion",
+    "video-editing",
+    "ai-agent",
+    "reels",
+    "tiktok",
+    "whisper",
+    "subtitles"
+  ],
+  "author": "Aliw02",
+  "license": "MIT"
+}
