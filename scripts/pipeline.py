@@ -33,6 +33,8 @@ from transcribe import transcribe_video
 from director import create_edit_plan_file
 from qc import run_quality_control
 
+TEMP_DIR = ".temp"
+
 def run_pipeline(
     input_video: str,
     output_video: str = "output/final_reel.mp4",
@@ -86,7 +88,7 @@ def run_pipeline(
     # -------------------------------------------------------------
     # Stage 2: Kinetic Subtitle Transcription
     # -------------------------------------------------------------
-    print("\n🎙️ [Stage 2/5] Transcribing word-level timestamps with Whisper...")
+    print("\n🎙️ [Stage 2/6] Transcribing word-level timestamps with Whisper...")
     subs_data = transcribe_video(
         video_path=trimmed_video,
         output_json=captions_json,
@@ -97,11 +99,25 @@ def run_pipeline(
     )
     
     # -------------------------------------------------------------
-    # Stage 3: AI Director Edit Planning
+    # Stage 3: LLM / Agent Caption Review & Dialect Audit (Pre-Generation)
     # -------------------------------------------------------------
-    print("\n🧠 [Stage 3/5] AI Director analyzing pacing, hooks, zooms & overlays...")
+    print("\n🔍 [Stage 3/6] LLM / AI Director reviewing captions & dialect accuracy...")
+    from director import audit_and_correct_captions
+    with open(captions_json, "r", encoding="utf-8") as f:
+        raw_captions = json.load(f)
+        
+    audited_captions = audit_and_correct_captions(raw_captions)
+    reviewed_captions_json = os.path.join(TEMP_DIR, "captions_reviewed.json")
+    with open(reviewed_captions_json, "w", encoding="utf-8") as f:
+        json.dump(audited_captions, f, ensure_ascii=False, indent=2)
+    print(f"✨ [AI Audit] Audited and verified subtitles saved -> {reviewed_captions_json}")
+
+    # -------------------------------------------------------------
+    # Stage 4: AI Director Master Edit Planning
+    # -------------------------------------------------------------
+    print("\n🧠 [Stage 4/6] AI Director analyzing pacing, hooks, zooms & overlays...")
     edit_plan = create_edit_plan_file(
-        transcript_json_path=captions_json,
+        transcript_json_path=reviewed_captions_json,
         output_edit_plan_path=edit_plan_json,
         title=title,
         caption_theme=caption_theme,
@@ -127,9 +143,9 @@ def run_pipeline(
         json.dump(edit_plan, f, ensure_ascii=False, indent=2)
         
     # -------------------------------------------------------------
-    # Stage 4: Remotion High-Performance 9:16 Video Rendering
+    # Stage 5: Remotion High-Performance 9:16 Video Rendering
     # -------------------------------------------------------------
-    print("\n🚀 [Stage 4/5] Rendering 1080x1920 60FPS Video with Remotion...")
+    print("\n🚀 [Stage 5/6] Rendering 1080x1920 60FPS Video with Remotion...")
     npx_bin = "npx.cmd" if sys.platform == "win32" else "npx"
     render_cmd = [
         npx_bin, "remotion", "render",
@@ -148,11 +164,11 @@ def run_pipeline(
         raise
         
     # -------------------------------------------------------------
-    # Stage 5: Post-Render Quality Control (QC Validator)
+    # Stage 6: Post-Render Quality Control (QC Validator)
     # -------------------------------------------------------------
     qc_passed = True
     if not skip_qc:
-        print("\n🔍 [Stage 5/5] Running automated Quality Control (QC) inspection...")
+        print("\n🔍 [Stage 6/6] Running automated Quality Control (QC) inspection...")
         qc_passed, qc_report = run_quality_control(
             video_path=output_video,
             edit_plan_path=edit_plan_json

@@ -70,14 +70,26 @@ export interface OverlayItem {
   codeLanguage?: string;
 }
 
+export type ZoomEventType =
+  | "punch_in"
+  | "slow_zoom"
+  | "slow_zoom_in"
+  | "slow_zoom_out"
+  | "snap"
+  | "shake";
+
+export type ZoomType = ZoomEventType;
+
 export interface ZoomEvent {
   id?: string | number;
   startFrame: number;
-  durationInFrames: number;
+  durationInFrames?: number;
+  endFrame?: number;
   scale: number; // e.g. 1.15 for punch-in
   originX?: string; // e.g. "50%"
   originY?: string; // e.g. "40%"
-  type?: "punch_in" | "slow_zoom" | "snap";
+  type?: ZoomEventType;
+  ease?: string;
   holdFrames?: number;
 }
 
@@ -135,6 +147,13 @@ export interface HookConfig {
   durationInFrames?: number;
 }
 
+export interface InfoCardProps {
+  enabled: boolean;
+  text: string;
+  startFrame: number;
+  durationInFrames: number;
+}
+
 export interface ReelProps {
   videoSrc?: string;
   durationInFrames: number;
@@ -154,10 +173,7 @@ export interface ReelProps {
   
   // Backward compatibility
   highlightColor?: string;
-  infoCard?: {
-    enabled: boolean;
-    text: string;
-    startFrame: number;
-    durationInFrames: number;
-  };
+  infoCard?: InfoCardProps;
+
+  [key: string]: unknown;
 }

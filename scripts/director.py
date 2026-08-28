@@ -1,13 +1,8 @@
 """
 AI Director / Edit Planner Module
-Analyzes transcript, audio energy, and content context to generate a master edit_plan.json.
-Determines:
-- Hook detection & intro styling
-- Semantic word highlighting (replacing character-length heuristics)
-- Smart punch-in zoom triggers on emphasis phrases
-- Contextual multi-overlay placements (cards, stats, quotes, bullets)
-- Sparse, meaningful emoji selection
-- Caption theme & audio ducking configuration
+Dynamic, non-hardcoded editor engine.
+Analyzes speech timing, duration variance, and acoustic rhythm to synthesize edit_plan.json.
+Enables AI Agents and Creators to direct cuts, hooks, kinetic typography, zooms, and overlays dynamically.
 """
 
 import os
@@ -24,63 +19,30 @@ if sys.platform == "win32":
     except Exception:
         pass
 
-# Contextual high-impact keywords for Iraqi & Modern Standard Arabic + English
-ARABIC_IMPORTANCE_SEEDS = {
-    # High-emphasis concept markers
-    "مهم", "سر", "خطير", "فرصة", "نتيجة", "حل", "مشكلة", "طريقة", "خطوة",
-    "اسمع", "شوف", "دير بالك", "انتبه", "ركز", "تدري", "تعرف", "شلون",
-    "مليون", "دولار", "ارباح", "فلوس", "مجانا", "سريع", "تطبيق", "موقع",
-    "ذكاء", "اصطناعي", "برمجة", "كود", "اداة", "فكرة", "نجاح", "هدف",
-    "احسن", "افضل", "اقوى", "اكبر", "اول", "جديد", "ثورة", "فارق"
-}
-
-ENGLISH_IMPORTANCE_SEEDS = {
-    "secret", "important", "key", "result", "solution", "hack", "mistake",
-    "money", "profit", "free", "fast", "ai", "tool", "app", "code", "success",
-    "best", "worst", "stop", "watch", "look", "boost", "growth", "power"
-}
-
 def clean_token(word: str) -> str:
-    """Strip punctuation and normalize for semantic comparison."""
-    w = re.sub(r'[^\w\s]', '', word.strip().lower())
-    # Arabic normalizations
-    w = re.sub(r'[إأآا]', 'ا', w)
-    w = re.sub(r'ة$', 'ه', w)
-    w = re.sub(r'ى$', 'ي', w)
-    return w
+    """Normalize text token for comparison."""
+    return re.sub(r'[^\w\s]', '', word.strip().lower())
 
-def is_semantic_keyword(word: str) -> bool:
-    clean = clean_token(word)
-    if not clean or len(clean) < 2:
-        return False
-    if clean in ARABIC_IMPORTANCE_SEEDS or clean in ENGLISH_IMPORTANCE_SEEDS:
+def is_dynamic_emphasis(word_item: Dict[str, Any], avg_word_duration: float = 0.35) -> bool:
+    """
+    Dynamically detect vocal emphasis based on acoustic timing.
+    Words held significantly longer than average speech cadence or containing numbers
+    naturally indicate speaker emphasis without hardcoded wordlists.
+    """
+    start = word_item.get("start", 0.0)
+    end = word_item.get("end", 0.0)
+    duration = end - start
+    word = word_item.get("word", "")
+    
+    # Numbers and percentages are always salient
+    if any(c.isdigit() for c in word):
         return True
-    # Numbers/Percentages are always high emphasis
-    if re.match(r'^\d+(\.\d+)?%?$', clean) or any(c.isdigit() for c in clean):
+        
+    # Words elongated in speech (> 1.4x average duration)
+    if duration > (avg_word_duration * 1.4) and len(word) > 2:
         return True
+        
     return False
-
-def select_contextual_emoji(phrase: str) -> Optional[str]:
-    """Select a single meaningful emoji for a phrase if truly relevant, avoiding spam."""
-    phrase_clean = clean_token(phrase)
-    
-    emoji_map = [
-        (["فلوس", "دولار", "ارباح", "ربح", "سعر", "money", "profit", "cash"], "💰"),
-        (["ذكاء", "اصطناعي", "روبوت", "ai", "robot", "llm", "gpt"], "🤖"),
-        (["فكرة", "حل", "سر", "سرية", "idea", "secret", "hack"], "💡"),
-        (["سريع", "سرعة", "صاروخ", "fast", "speed", "rocket"], "🚀"),
-        (["كود", "برمجة", "تطوير", "code", "dev", "program"], "👨‍💻"),
-        (["هدف", "نتيجة", "target", "goal", "result"], "🎯"),
-        (["نار", "قوي", "اسطوري", "fire", "powerful"], "🔥"),
-        (["انتبه", "خطر", "مهم", "warning", "important"], "⚠️"),
-        (["صح", "نجاح", "ممتاز", "success", "check"], "✅"),
-        (["خطا", "غلط", "error", "mistake"], "❌"),
-    ]
-    
-    for keywords, emoji in emoji_map:
-        if any(kw in phrase_clean for kw in keywords):
-            return emoji
-    return None
 
 def analyze_transcript_and_plan(
     transcript_data: Dict[str, Any],
@@ -92,166 +54,135 @@ def analyze_transcript_and_plan(
     fps: int = 60
 ) -> Dict[str, Any]:
     """
-    Core AI Director Engine.
-    Processes raw transcription chunks and synthesizes an intelligent edit plan.
+    Autonomous AI Director Engine.
+    Processes transcription chunks and compiles an intelligent, dynamic edit plan.
     """
     subtitles = transcript_data.get("subtitles", [])
-    total_frames = int(transcript_data.get("duration", 0) * fps)
+    total_duration = transcript_data.get("duration", 0.0)
+    total_frames = int(total_duration * fps) if total_duration > 0 else 750
     
-    # 1. Enhance Subtitles with Semantic Highlights & Selective Emojis
+    # Calculate average word duration for dynamic acoustic emphasis
+    all_durations = [
+        (w.get("end", 0.0) - w.get("start", 0.0))
+        for chunk in subtitles
+        for w in chunk.get("words", [])
+        if (w.get("end", 0.0) - w.get("start", 0.0)) > 0
+    ]
+    avg_duration = sum(all_durations) / len(all_durations) if all_durations else 0.35
+    
     enhanced_subtitles = []
-    emphasis_timestamps = []
+    emphasis_events = []
     
     for chunk in subtitles:
         chunk_text = chunk.get("text", "")
         chunk_words = chunk.get("words", [])
         
-        # Determine semantic word highlights
         enhanced_words = []
         chunk_has_emphasis = False
         
         for w in chunk_words:
             raw_w = w.get("word", "")
-            is_highlight = is_semantic_keyword(raw_w)
+            is_highlight = w.get("highlight", False) or is_dynamic_emphasis(w, avg_duration)
             
             if is_highlight:
                 chunk_has_emphasis = True
                 
+            start_f = w.get("startFrame", int(w.get("start", 0.0) * fps))
+            end_f = w.get("endFrame", int(w.get("end", 0.0) * fps))
+            
             enhanced_words.append({
                 "word": raw_w,
                 "start": w.get("start", 0.0),
                 "end": w.get("end", 0.0),
-                "startFrame": w.get("startFrame", int(w.get("start", 0.0) * fps)),
-                "endFrame": w.get("endFrame", int(w.get("end", 0.0) * fps)),
-                "highlight": is_highlight,
-                "emoji": None # Emojis live at phrase level to prevent clutter
+                "startFrame": start_f,
+                "endFrame": end_f,
+                "highlight": is_highlight
             })
             
-        # Contextual emoji for the chunk (only if high emphasis)
-        chunk_emoji = select_contextual_emoji(chunk_text) if chunk_has_emphasis else None
+        start_f = chunk.get("startFrame", int(chunk.get("start", 0.0) * fps))
+        end_f = chunk.get("endFrame", int(chunk.get("end", 0.0) * fps))
         
-        emphasis_level = "normal"
         if chunk_has_emphasis:
-            emphasis_level = "high"
-            emphasis_timestamps.append({
-                "startFrame": chunk.get("startFrame", 0),
-                "endFrame": chunk.get("endFrame", 0),
-                "text": chunk_text
-            })
+            emphasis_events.append({"startFrame": start_f, "endFrame": end_f, "text": chunk_text})
             
         enhanced_subtitles.append({
-            "id": chunk.get("id", 0),
-            "startFrame": chunk.get("startFrame", 0),
-            "endFrame": chunk.get("endFrame", 0),
+            "id": chunk.get("id", len(enhanced_subtitles)),
+            "start": chunk.get("start", 0.0),
+            "end": chunk.get("end", 0.0),
+            "startFrame": start_f,
+            "endFrame": end_f,
             "text": chunk_text,
-            "emoji": chunk_emoji,
-            "emphasisLevel": emphasis_level,
+            "highlight": chunk_has_emphasis,
             "words": enhanced_words
         })
 
-    # 2. Hook Detection (First 1-3 seconds)
-    hook_title = custom_title
-    if not hook_title and enhanced_subtitles:
-        # Extract the punchiest words from the opening subtitle
-        first_chunk = enhanced_subtitles[0]
-        hook_title = first_chunk["text"]
-        
+    # Hook Strategy
+    hook_title = custom_title or (subtitles[0].get("text", "Video") if subtitles else "Reel")
     hook_config = {
-        "enabled": enable_hook,
-        "title": hook_title or "فيديو جديد",
-        "subtitle": "AI Reel Editor",
-        "durationInFrames": min(90, int(2.5 * fps))
-    }
+        "title": hook_title,
+        "subtitle": "AI Post-Production",
+        "durationFrames": min(120, int(total_frames * 0.2))
+    } if enable_hook else None
 
-    # 3. Smart Punch-in Zoom Scheduling
+    # Punch-in Zooms Strategy (Triggered on emphasis moments)
     zoom_events = []
-    if enable_zooms and emphasis_timestamps:
-        last_zoom_end = 0
-        min_gap_between_zooms = int(3.0 * fps) # At least 3s between zooms to avoid dizziness
-        
-        for idx, emp in enumerate(emphasis_timestamps):
-            start_f = emp["startFrame"]
-            if start_f > last_zoom_end + min_gap_between_zooms:
-                duration_f = min(int(2.0 * fps), max(int(1.2 * fps), emp["endFrame"] - start_f + int(0.4 * fps)))
-                zoom_events.append({
-                    "id": f"zoom-{idx + 1}",
-                    "startFrame": start_f,
-                    "durationInFrames": duration_f,
-                    "scale": 1.15, # Dynamic punch-in
-                    "originX": "50%",
-                    "originY": "40%",
-                    "type": "punch_in"
-                })
-                last_zoom_end = start_f + duration_f
-
-    # 4. Multi-Overlay Scheduling
-    overlays = []
-    if enable_overlays and len(enhanced_subtitles) >= 3:
-        # Schedule an explanatory glass card near second 3-5 if not overlapping with hook
-        card_start = max(hook_config["durationInFrames"] + 15, int(3.5 * fps))
-        if total_frames > card_start + int(4.0 * fps):
-            # Find a relevant concept from the middle of the video
-            mid_subs = enhanced_subtitles[1:min(5, len(enhanced_subtitles))]
-            card_text = " ".join(s["text"] for s in mid_subs)
-            if len(card_text) > 80:
-                card_text = card_text[:77] + "..."
-                
-            overlays.append({
-                "id": "director-concept-card",
-                "type": "card",
-                "startFrame": card_start,
-                "durationInFrames": int(4.0 * fps),
-                "title": "الفكرة الرئيسية",
-                "text": card_text or "نقاط مهمة يجب الانتباه إليها",
-                "icon": "💡",
-                "theme": "glass",
-                "position": "top"
+    if enable_zooms and emphasis_events:
+        for idx, emp in enumerate(emphasis_events[:4]):
+            zoom_events.append({
+                "id": idx + 1,
+                "startFrame": max(0, emp["startFrame"] - 5),
+                "endFrame": emp["endFrame"] + 10,
+                "scale": 1.18 if idx % 2 == 0 else 1.12,
+                "originX": "50%",
+                "originY": "38%",
+                "ease": "spring"
             })
 
-    # 5. Caption Style Configuration
+    # Caption Style
     caption_style = {
         "theme": caption_theme,
-        "fontFamily": "'Cairo', 'Tajawal', 'Readex Pro', -apple-system, sans-serif",
-        "fontSize": 56,
+        "preset": caption_theme,
+        "fontFamily": "Tajawal, Cairo, sans-serif",
+        "fontSize": 70,
         "highlightColor": "#FFE600",
-        "activeWordColor": "#00FFCC",
-        "inactiveWordColor": "#FFFFFF",
-        "positionBottom": 340,
-        "direction": "rtl",
-        "uppercase": False
+        "position": "bottom",
+        "showHighlight": True,
+        "animation": "bounce"
     }
 
-    # 6. Audio Pacing & Ducking Configuration
+    # Audio Ducking Configuration
     audio_config = {
+        "bgmSrc": None,
         "bgmVolume": 0.15,
-        "duckingVolume": 0.035, # Lowers BGM during active speaking frames
-        "fadeDurationFrames": int(0.5 * fps)
+        "duckedVolume": 0.04,
+        "duckingEnabled": True
     }
 
-    # 7. Progress Bar Config
+    # Progress Bar
     progress_bar = {
         "enabled": True,
-        "gradientColors": ["#FFE600", "#00FFCC"],
+        "gradientColors": ["#FFE600", "#00FFCC", "#FF007A"],
         "height": 8,
         "position": "top"
     }
 
-    # Assemble Full Edit Plan Contract
+    # Assemble Unified Edit Plan
     edit_plan = {
         "version": "2.0.0",
         "durationInFrames": total_frames,
         "totalFrames": total_frames,
         "fps": fps,
-        "title": hook_title or "Reel",
+        "title": hook_title,
         "hook": hook_config,
         "captionStyle": caption_style,
         "subtitles": enhanced_subtitles,
-        "overlays": overlays,
         "zoomEvents": zoom_events,
+        "overlays": transcript_data.get("overlays", []),
+        "mediaOverlays": transcript_data.get("mediaOverlays", []),
         "audio": audio_config,
         "progressBar": progress_bar
     }
-    
+
     return edit_plan
 
 def create_edit_plan_file(
@@ -261,42 +192,37 @@ def create_edit_plan_file(
     caption_theme: str = "box_glass",
     fps: int = 60
 ) -> Dict[str, Any]:
-    """Reads transcript JSON and exports edit_plan.json"""
-    print(f"🎬 [AI Director] Planning video edit from: {transcript_json_path}")
-    
     with open(transcript_json_path, "r", encoding="utf-8") as f:
         transcript_data = json.load(f)
-        
+
     edit_plan = analyze_transcript_and_plan(
         transcript_data=transcript_data,
         custom_title=title,
         caption_theme=caption_theme,
         fps=fps
     )
-    
+
     os.makedirs(os.path.dirname(os.path.abspath(output_edit_plan_path)), exist_ok=True)
     with open(output_edit_plan_path, "w", encoding="utf-8") as f:
         json.dump(edit_plan, f, ensure_ascii=False, indent=2)
-        
-    print(f"📋 [AI Director] Master edit plan synthesized -> {output_edit_plan_path}")
-    print(f"   • Subtitles: {len(edit_plan['subtitles'])} chunks")
-    print(f"   • Punch Zooms: {len(edit_plan['zoomEvents'])} events")
-    print(f"   • Overlays: {len(edit_plan['overlays'])} items")
+
     return edit_plan
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="AI Director / Edit Planner")
-    parser.add_argument("--transcript", required=True, help="Path to transcript.json")
-    parser.add_argument("--output", default=".temp/edit_plan.json", help="Output path for edit_plan.json")
-    parser.add_argument("--title", help="Custom video title/hook")
-    parser.add_argument("--theme", default="box_glass", choices=["box_glass", "neon", "bold_yellow", "clean_white", "cyber"])
-    parser.add_argument("--fps", type=int, default=60)
+    parser = argparse.ArgumentParser(description="AI Director Edit Planner")
+    parser.add_argument("--transcript", required=True, help="Path to captions.json")
+    parser.add_argument("--output", default=".temp/edit_plan.json", help="Path to output edit_plan.json")
+    parser.add_argument("--title", help="Custom hook title banner")
+    parser.add_argument("--theme", default="box_glass", help="Caption theme")
+    parser.add_argument("--fps", type=int, default=60, help="Frame rate")
+
     args = parser.parse_args()
-    
-    create_edit_plan_file(
+
+    plan = create_edit_plan_file(
         transcript_json_path=args.transcript,
         output_edit_plan_path=args.output,
         title=args.title,
         caption_theme=args.theme,
         fps=args.fps
     )
+    print(f"🎬 [AI Director] Synthesized dynamic edit plan -> {args.output}")

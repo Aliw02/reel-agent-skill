@@ -46,40 +46,64 @@ export const ReelComposition: React.FC<ReelProps> = ({
   const frame = useCurrentFrame();
   const { durationInFrames, fps } = useVideoConfig();
 
-  // 1. DYNAMIC SMART ZOOM CALCULATION (Punch-ins & Keyframes)
+  // 1. DYNAMIC SMART CAMERA CHOREOGRAPHY (Punch-ins, Slow Push/Pull, Snap, Shake)
   let currentZoom = 1.0;
   let originX = "50%";
   let originY = "40%";
+  let shakeOffset = 0;
 
   if (zoomEvents && zoomEvents.length > 0) {
     for (const z of zoomEvents) {
-      const zEnd = z.startFrame + z.durationInFrames;
+      const zEnd = z.startFrame + (z.durationInFrames || (z.endFrame ? z.endFrame - z.startFrame : 60));
       if (frame >= z.startFrame && frame <= zEnd) {
         originX = z.originX || "50%";
         originY = z.originY || "40%";
+        const targetScale = z.scale || 1.18;
+        const eventDuration = zEnd - z.startFrame;
+        const progress = (frame - z.startFrame) / Math.max(1, eventDuration);
+        const mode = z.type || "punch_in";
 
-        const entranceFrames = Math.min(12, Math.floor(z.durationInFrames * 0.25));
-        const exitFrames = Math.min(12, Math.floor(z.durationInFrames * 0.25));
-        const holdEnd = zEnd - exitFrames;
-
-        if (frame < z.startFrame + entranceFrames) {
-          // Punch-in spring entrance
-          const p = spring({
-            frame: frame - z.startFrame,
-            fps,
-            config: { damping: 12, mass: 0.4, stiffness: 200 },
-          });
-          currentZoom = interpolate(p, [0, 1], [1.0, z.scale]);
-        } else if (frame > holdEnd) {
-          // Smooth ease-out back to 1.0
-          const exitProgress = (frame - holdEnd) / exitFrames;
-          currentZoom = interpolate(exitProgress, [0, 1], [z.scale, 1.0], {
+        if (mode === "slow_zoom_in" || mode === "slow_zoom") {
+          // Slow cinematic push-in
+          currentZoom = interpolate(progress, [0, 1], [1.0, targetScale], {
             extrapolateLeft: "clamp",
             extrapolateRight: "clamp",
           });
+        } else if (mode === "slow_zoom_out") {
+          // Slow cinematic pull-out
+          currentZoom = interpolate(progress, [0, 1], [targetScale, 1.0], {
+            extrapolateLeft: "clamp",
+            extrapolateRight: "clamp",
+          });
+        } else if (mode === "snap") {
+          // Hard instant punch cut
+          currentZoom = targetScale;
+        } else if (mode === "shake") {
+          // High-energy impact shake
+          currentZoom = targetScale;
+          shakeOffset = Math.sin((frame - z.startFrame) * 1.5) * 8 * (1 - progress);
         } else {
-          // Hold zoomed in
-          currentZoom = z.scale;
+          // Default: Spring Punch-in with smooth return
+          const entranceFrames = Math.min(12, Math.floor(eventDuration * 0.25));
+          const exitFrames = Math.min(12, Math.floor(eventDuration * 0.25));
+          const holdEnd = zEnd - exitFrames;
+
+          if (frame < z.startFrame + entranceFrames) {
+            const p = spring({
+              frame: frame - z.startFrame,
+              fps,
+              config: { damping: 12, mass: 0.4, stiffness: 200 },
+            });
+            currentZoom = interpolate(p, [0, 1], [1.0, targetScale]);
+          } else if (frame > holdEnd) {
+            const exitProgress = (frame - holdEnd) / exitFrames;
+            currentZoom = interpolate(exitProgress, [0, 1], [targetScale, 1.0], {
+              extrapolateLeft: "clamp",
+              extrapolateRight: "clamp",
+            });
+          } else {
+            currentZoom = targetScale;
+          }
         }
         break;
       }

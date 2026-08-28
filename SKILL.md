@@ -3,156 +3,130 @@ name: reel-agent-skill
 description: Use when creating, editing, trimming, animating, or producing vertical 9:16 short-form video reels, TikToks, Shorts, with kinetic RTL Arabic/multilingual subtitles, AI punch-in zooms, speech ducking, and visual assets.
 ---
 
-# 🎬 Reel Agent Skill (Autonomous AI Video Editor Pro)
+# 🎬 Reel Agent Skill: Master AI Video Editor & Motion Graphics Director
 
-## Overview
+## 🎯 The Agent's Creative Role
 
-**Automates professional 9:16 vertical video post-production from raw talking-head footage to viral-ready Reels, TikToks, and YouTube Shorts.**
+**You are not a passive script runner — you are the Master Video Editor, Cinematographer, and Motion Graphics Director.**
 
-The engine combines speech-aware silence trimming, dialect-accurate RTL Arabic kinetic typography, an autonomous AI Director scheduling dynamic punch-in zooms and glassmorphic overlays, non-overlapping visual sticker positioning, background music ducking, 60FPS Remotion rendering, and automated Quality Control (QC).
-
----
-
-## When to Use
-
-### Triggers & Symptoms:
-- You have raw talking-head MP4/MOV footage and need a finished vertical 9:16 reel.
-- Video requires word-by-word highlighted kinetic subtitles in Arabic (with full RTL & dialect support) or English.
-- Video contains dead air, long pauses, or stuttering that needs seamless jump-cut trimming.
-- Need automated hook banners, tactical punch-in zooms, or floating stat/card overlays matching spoken concepts.
-- Need to insert visual stickers or illustrations without obscuring the speaker's face.
-
-### When NOT to Use:
-- Horizontal 16:9 cinematic feature films or landscape multi-cam documentary editing.
-- Silent videos with no spoken dialogue or audio cues.
+Your mandate is to take raw, unedited footage and autonomously craft viral-ready, high-retention 9:16 short-form post-production masterpieces (Reels, TikToks, YouTube Shorts). You collaborate with the creator, make directorial decisions from A to Z, audit dialects, choreograph camera movements, and design contextual motion graphics.
 
 ---
 
-## Master Production Pipeline
+## 🛠️ The 6-Stage End-to-End Production Workflow
 
 ```
-[Raw Talking-Head Footage]
+[Raw Footage Ingestion]
           │
           ▼
-1. ✂️ Silence Trimming (scripts/cut_silence.py)
-   └─ Strips dead air with adaptive speech padding (trimmed.mp4)
+Stage 1: ✂️ Multimodal Inspection & Speech-Aware Silence Trimming
           │
           ▼
-2. 🎙️ Multimodal & Dialect Transcription (scripts/transcribe.py)
-   └─ Word-level millisecond timestamps & Arabic normalization (captions.json)
+Stage 2: 🎙️ Pre-Generation Audio Transcription (Word-Level Timestamps)
           │
           ▼
-3. 🧠 AI Director Synthesis (scripts/director.py)
-   └─ Hooks, tactical punch-in zooms, overlays & stickers (edit_plan.json)
+Stage 3: 🔍 Agent & Creator Caption Audit (Dialect & Spelling Verification)
           │
           ▼
-4. 🚀 60FPS Remotion Rendering (src/index.ts)
-   └─ 1080x1920 multi-layer compositing & audio ducking (output.mp4)
+Stage 4: 🧠 Autonomous Directing & Motion Graphics Synthesis (edit_plan.json)
           │
           ▼
-5. 🔍 Automated Quality Control (scripts/qc.py)
-   └─ Resolution, FPS, audio stream, & duration parity checks (qc_report.json)
+Stage 5: 🚀 Remotion 60FPS Multi-Layer Rendering & Audio Ducking
           │
           ▼
-[Viral High-Retention 9:16 Reel]
+Stage 6: 🔍 Automated Quality Control (QC) & Final Delivery
 ```
 
 ---
 
-## Step-by-Step Production Recipe
+### 1. Ingestion & Multimodal Inspection
+- **Action**: Inspect the raw video (`view_file` on MP4) to observe the speaker's body language, eye contact, pointing gestures, facial expressions, and background negative space.
+- **Goal**: Identify where the speaker is located (e.g. center, left) so overlays and stickers never obscure the face.
 
-### Stage 1: Speech-Aware Silence Trimming
-Removes dead air while protecting conversational cadence and comedic/dramatic timing.
-```bash
-python scripts/cut_silence.py --input "template/raw.mp4" --output ".temp/trimmed.mp4" --silence-thresh -35 --min-silence-len 0.5
-```
-- **Completion Criteria**: `.temp/trimmed.mp4` generated with audio/video stream sync.
+### 2. Speech-Aware Silence Trimming (Jump-Cuts)
+- **Action**: Cut dead air and hesitation while preserving conversational breathing, comedic beats, and dramatic pauses with adaptive speech padding.
+- **Command**:
+  ```bash
+  python scripts/cut_silence.py --input "template/raw_before.mp4" --output ".temp/trimmed.mp4" --silence-thresh -35 --min-silence-len 0.5
+  ```
 
-### Stage 2: Multimodal & Arabic Dialect Transcription
-Generates word-level timestamps with Arabic letter normalization (unifying Alif/Yaa, stripping Tatweel/Tashkeel) and semantic phrase chunking.
-```bash
-python scripts/transcribe.py --audio ".temp/trimmed.mp4" --output ".temp/captions.json" --model "base" --language "ar"
-```
-- **Completion Criteria**: `.temp/captions.json` contains timestamped `chunks` and nested `words`.
+### 3. Pre-Generation Transcription & Timestamps
+- **Action**: Transcribe audio to extract word-level millisecond timestamps into `.temp/captions.json` as an independent step **before** generation.
+- **Command**:
+  ```bash
+  python scripts/transcribe.py --audio ".temp/trimmed.mp4" --output ".temp/captions.json" --model "base" --language "ar"
+  ```
 
-### Stage 3: AI Director & Edit Plan Synthesis
-Analyzes dialogue context, identifies opening hook (0-3s), schedules tactical punch-in zooms at high-emphasis words, positions contextual stickers (e.g. Einstein portrait, code snippets, stat badges), and compiles `edit_plan.json`.
-```bash
-python scripts/director.py --transcript ".temp/captions.json" --output ".temp/edit_plan.json" --theme "box_glass" --title "Hook Title"
-```
-- **Completion Criteria**: `.temp/edit_plan.json` validates against the TypeScript `EditPlan` schema.
+### 4. Agent & Creator Caption Audit (Dialect & Context Verification)
+- **Action**: The Agent reviews the generated text against the actual spoken Arabic dialect (Iraqi, Levantine, Egyptian, Gulf, or English), corrects misheard terms, proper names, and grammar, and aligns with creator intent before building the edit plan.
+- **Rule**: Never pass raw unverified speech-to-text directly to final render without semantic review.
 
-### Stage 4: Remotion 60FPS Video Rendering
-Compiles composition at 1080x1920 60FPS with spring animations, kinetic RTL text, positioned overlays, and automatic audio ducking.
-```bash
-npx remotion render src/index.ts ReelComposition output/final_reel.mp4 --props=.temp/edit_plan.json --gl=angle
-```
-- **Completion Criteria**: `output/final_reel.mp4` generated.
+### 5. Autonomous Directing & Motion Graphics Synthesis
+The Agent compiles the complete `edit_plan.json` with the following creative dimensions:
 
-### Stage 5: Automated Quality Control (QC)
-Verifies resolution ($1080 \times 1920$), frame rate (60 fps), audio stream integrity (AAC/stereo), file size, and duration parity.
-```bash
-python scripts/qc.py --video "output/final_reel.mp4" --edit-plan ".temp/edit_plan.json"
-```
-- **Completion Criteria**: All checks report `PASS`.
+#### A. Hook Discovery (First 0–3 Seconds)
+- Create a compelling title banner that stops the scroll immediately (e.g. `🧠 تجربة المونتاج الذكي`).
+
+#### B. Camera Choreography (5 Dynamic Movement Types)
+Choreograph camera movements dynamically based on emotion and vocal energy:
+- `punch_in`: Fast spring zoom into high-emphasis words/punchlines.
+- `slow_zoom_in`: Smooth cinematic push-in building tension or focus during key explanations.
+- `slow_zoom_out`: Smooth pull-out revealing the bigger picture or transitioning scenes.
+- `snap`: Instantaneous 1-frame hard punch cut for sudden punchlines or surprises.
+- `shake`: Micro-oscillation camera shake for comedic shock or explosive impact moments.
+
+#### C. Non-Overlapping Visual Stickers & Motion Graphics
+- When the speaker gestures or references a concept (e.g. points at wall referencing Einstein):
+  - Place custom visual stickers or illustrations in empty negative space (e.g. `top-right` at `top: 12%`, `right: 6%`).
+  - Apply spring pop-in with $-8^\circ \to 0^\circ$ rotation and drop shadows.
+  - **Hard Rule**: Never overlap or obscure the speaker's face or hand gestures.
+
+#### D. Kinetic RTL Subtitles & Typography
+- Render word-by-word highlighted subtitles with Arabic font stack (Tajawal, Cairo) and `direction: rtl`.
+- Supported themes: `box_glass`, `neon`, `bold_yellow`, `clean_white`, `cyber`.
+
+#### E. Smart Audio Ducking
+- Multi-track background music automatically ducks volume during active speech frames and swells during dramatic pauses.
+
+### 6. Master Remotion 60FPS Render & Quality Control (QC)
+- Render the audited `edit_plan.json` at 1080x1920 60FPS:
+  ```bash
+  npx remotion render src/index.ts ReelComposition output/final_reel.mp4 --props=.temp/edit_plan.json --gl=angle
+  ```
+- Run automated Quality Control:
+  ```bash
+  python scripts/qc.py --video "output/final_reel.mp4" --edit-plan ".temp/edit_plan.json"
+  ```
 
 ---
 
-## Unified Master Pipeline Command
-
-Execute the complete 5-stage pipeline in a single command:
+## ⚡ Master One-Command Pipeline
 
 ```bash
 python scripts/pipeline.py \
-  --input "template/video_2026-08-28_16-30-00.mp4" \
+  --input "template/raw_before.mp4" \
   --output "output/final_reel.mp4" \
-  --title "تجربة المونتاج الذكي" \
+  --title "المونتاج الذكي الكامل" \
   --theme "box_glass" \
-  --whisper-model "base" \
   --fps 60
 ```
 
 ---
 
-## Visual Themes & Typography Reference
+## 🖥️ Live Studio Interactive Scrubbing
 
-| Theme Key | Visual Style | Primary Colors | Best For |
-| :--- | :--- | :--- | :--- |
-| `box_glass` | Frosted glass card with glow outline | `#FFE600`, `#00FFCC`, Glass `rgba(15,23,42,0.85)` | Tech, Business, Tutorials |
-| `neon` | Vibrant multi-color neon text shadows | `#00FFCC`, `#FF007A`, `#FFE600` | Gaming, Entertainment, Viral |
-| `bold_yellow` | High-contrast black stroke & shadow | `#FFE600`, `#FFFFFF`, `#000000` | Alex Hormozi style, Motivation |
-| `clean_white` | Minimalist elegant modern typography | `#FFFFFF`, Subtle `#38BDF8` highlight | Storytelling, Podcasts, Quotes |
-| `cyber` | Futuristic cybernetic angular badge | `#00FFCC`, `#0F172A`, Electric Blue | AI, Crypto, Programming |
-
----
-
-## Non-Overlapping Asset & Sticker Placement Rules
-
-When placing visual assets, illustrations, or stickers (e.g. Einstein portrait, diagrams, charts):
-1. **Analyze Speaker Bounding Box**: Identify the speaker's head/torso position (usually center or center-left).
-2. **Target Negative Space**: Position stickers in empty background space (typically `top-right` at `top: 12%`, `right: 6%` or `top-left` at `top: 12%`, `left: 6%`).
-3. **Gesture Synchronization**: Trigger the asset on the exact frame the speaker points, looks, or references the entity.
-4. **Dimensions**: Restrict width to $280\text{px} - 340\text{px}$ to prevent crowding the 1080px canvas.
-5. **Animation**: Apply a spring pop-in (`damping: 12, stiffness: 200`) with subtle $-8^\circ \to 0^\circ$ rotation.
-
----
-
-## Interactive Live Studio
-
-Launch the interactive Remotion Studio in the browser to scrub the timeline, inspect keyframes, and tune props live:
-
+To review and fine-tune layers in real time inside the browser:
 ```bash
 npm start
 ```
 
 ---
 
-## Common Pitfalls & Red Flags
+## 📋 Directorial Rules of Thumb
 
-| Pitfall / Excuse | Reality & Mandatory Fix |
+| Challenge | Directorial Action |
 | :--- | :--- |
-| **"Whisper misunderstood an Iraqi dialect word"** | Act as the AI Director: listen to the audio directly via multimodal inspection and correct the transcript in `edit_plan.json`. |
-| **"Sticker covers the speaker's face"** | Set `position: "top-right"` with explicit `top: "12%"` and `right: "6%"` away from the subject center. |
-| **"Static local files fail to load in Remotion"** | Place media assets in `public/` and resolve via `staticFile(filename)`. |
-| **"Windows subprocess commands fail with error 2"** | Use `shell=True` and `npx.cmd` when invoking Remotion CLI from Python on Windows. |
-| **"Output duration differs from expected"** | Pass `durationInFrames` dynamically in `calculateMetadata` inside `Root.tsx` matching `edit_plan.json`. |
+| **Speaker points to empty space** | Spawn a floating sticker / diagram at that exact timestamp in the pointed quadrant. |
+| **Speaker delivers a key insight or metric** | Trigger a `punch_in` or `slow_zoom_in` accompanied by an electric yellow kinetic word highlight. |
+| **Whisper misidentifies a slang word** | The Agent audits the audio directly and writes the authentic dialect word in the transcript. |
+| **Speaker pauses for comedic effect** | The audio ducking engine smoothly elevates the BGM volume to fill the pause naturally. |
