@@ -178,7 +178,7 @@ def transcribe_video(
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Extract Kinetic Subtitles with Whisper")
-    parser.add_argument("--input", required=True, help="Input video file path")
+    parser.add_argument("--input", "--audio", dest="input", required=True, help="Input video or audio file path")
     parser.add_argument("--output", default=".temp/captions.json", help="Output JSON file path")
     parser.add_argument("--model", default="turbo", help="Whisper model (base, small, medium, large-v3, turbo)")
     parser.add_argument("--device", default="auto", choices=["auto", "cuda", "cpu"])

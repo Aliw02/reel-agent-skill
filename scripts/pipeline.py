@@ -49,26 +49,32 @@ def run_pipeline(
     enable_zooms: bool = True,
     enable_overlays: bool = True,
     bgm_path: Optional[str] = None,
-    skip_qc: bool = False
+    skip_qc: bool = False,
+    captions_path: Optional[str] = None,
+    skip_transcribe: bool = False
 ) -> Dict[str, Any]:
     """
-    Executes the full automated AI Reel editing pipeline.
+    Executes the automated AI Reel editing pipeline.
+    If captions_path is provided or skip_transcribe is set, Whisper transcription is bypassed.
     """
     temp_dir = os.path.join(PROJECT_ROOT, ".temp")
     os.makedirs(temp_dir, exist_ok=True)
     os.makedirs(os.path.dirname(os.path.abspath(output_video)), exist_ok=True)
     
     trimmed_video = os.path.join(temp_dir, "trimmed.mp4")
-    captions_json = os.path.join(temp_dir, "captions.json")
+    captions_json = captions_path if captions_path and os.path.exists(captions_path) else os.path.join(temp_dir, "captions.json")
     edit_plan_json = os.path.join(temp_dir, "edit_plan.json")
     qc_report_json = os.path.join(temp_dir, "qc_report.json")
     
     print("\n" + "=" * 65)
-    print("🎬 [AI REEL EDITOR] Starting Autonomous Video Production Pipeline")
+    print("🎬 [AI REEL EDITOR] Starting Video Production Pipeline")
     print(f"📁 Input Video : {os.path.abspath(input_video)}")
     print(f"🎯 Output Target: {os.path.abspath(output_video)}")
     print(f"🎨 Caption Theme: {caption_theme}")
-    print(f"🎙️ Whisper Model: {whisper_model} ({language})")
+    if captions_path and os.path.exists(captions_path):
+        print(f"📝 Pre-Generated Captions: {os.path.abspath(captions_path)} (Whisper Skipped)")
+    else:
+        print(f"🎙️ Whisper Model: {whisper_model} ({language})")
     print("=" * 65)
     
     # -------------------------------------------------------------
@@ -86,17 +92,22 @@ def run_pipeline(
     print(f"⏱️ Trimmed Duration: {video_duration:.2f}s ({total_frames} frames @ {fps}fps)")
     
     # -------------------------------------------------------------
-    # Stage 2: Kinetic Subtitle Transcription
+    # Stage 2: Kinetic Subtitle Transcription (Bypassed if pre-existing)
     # -------------------------------------------------------------
-    print("\n🎙️ [Stage 2/6] Transcribing word-level timestamps with Whisper...")
-    subs_data = transcribe_video(
-        video_path=trimmed_video,
-        output_json=captions_json,
-        model_size=whisper_model,
-        device=whisper_device,
-        language=language,
-        fps=fps
-    )
+    if captions_path and os.path.exists(captions_path):
+        print(f"\n⏩ [Stage 2/6] Using pre-generated captions from '{captions_path}' (Skipping Whisper)...")
+    elif skip_transcribe and os.path.exists(captions_json):
+        print(f"\n⏩ [Stage 2/6] Skipping Whisper; reusing existing captions '{captions_json}'...")
+    else:
+        print("\n🎙️ [Stage 2/6] Transcribing word-level timestamps with Whisper...")
+        subs_data = transcribe_video(
+            video_path=trimmed_video,
+            output_json=captions_json,
+            model_size=whisper_model,
+            device=whisper_device,
+            language=language,
+            fps=fps
+        )
     
     # -------------------------------------------------------------
     # Stage 3: LLM / Agent Caption Review & Dialect Audit (Pre-Generation)
@@ -201,7 +212,8 @@ if __name__ == "__main__":
     parser.add_argument("--lang", default="ar", help="Speech language (ar, en, auto)")
     parser.add_argument("--bgm", help="Optional path to background music MP3/WAV")
     parser.add_argument("--silence-thresh", type=int, default=-30, help="Silence threshold dB")
-    parser.add_argument("--fps", type=int, default=60, help="Video frame rate (30 or 60)")
+    parser.add_argument("--captions", help="Path to pre-generated captions.json (skips Whisper transcription)")
+    parser.add_argument("--skip-transcribe", action="store_true", help="Skip Whisper and reuse existing .temp/captions.json")
     parser.add_argument("--skip-qc", action="store_true", help="Skip post-render QC validator")
     
     args = parser.parse_args()
@@ -216,5 +228,7 @@ if __name__ == "__main__":
         bgm_path=args.bgm,
         silence_thresh_db=args.silence_thresh,
         fps=args.fps,
-        skip_qc=args.skip_qc
+        skip_qc=args.skip_qc,
+        captions_path=args.captions,
+        skip_transcribe=args.skip_transcribe
     )
