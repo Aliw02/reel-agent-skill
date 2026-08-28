@@ -9,12 +9,32 @@ import subprocess
 import argparse
 import numpy as np
 
+if sys.platform == "win32":
+    try:
+        sys.stdout.reconfigure(encoding="utf-8")
+        sys.stderr.reconfigure(encoding="utf-8")
+    except Exception:
+        pass
+
+import shutil
+
+def get_ffmpeg_binary():
+    path = shutil.which("ffmpeg")
+    if path:
+        return path
+    try:
+        import imageio_ffmpeg
+        return imageio_ffmpeg.get_ffmpeg_exe()
+    except Exception:
+        return "ffmpeg"
+
 def detect_silence_ffmpeg(video_path, silence_thresh_db=-30, min_silence_sec=0.4):
     """
     Uses ffmpeg silencedetect filter to find start and end times of silent intervals.
     """
+    ffmpeg_bin = get_ffmpeg_binary()
     cmd = [
-        "ffmpeg", "-i", video_path,
+        ffmpeg_bin, "-i", video_path,
         "-af", f"silencedetect=noise={silence_thresh_db}dB:d={min_silence_sec}",
         "-f", "null", "-"
     ]
@@ -38,14 +58,17 @@ def detect_silence_ffmpeg(video_path, silence_thresh_db=-30, min_silence_sec=0.4
     return silences
 
 def get_video_duration(video_path):
-    cmd = [
-        "ffprobe", "-v", "error",
-        "-show_entries", "format=duration",
-        "-of", "default=noprint_wrappers=1:nokey=1",
-        video_path
-    ]
-    result = subprocess.run(cmd, stdout=subprocess.PIPE, text=True, errors="ignore")
-    return float(result.stdout.strip())
+    ffmpeg_bin = get_ffmpeg_binary()
+    cmd = [ffmpeg_bin, "-i", video_path, "-f", "null", "-"]
+    res = subprocess.run(cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE, text=True, errors="ignore")
+    for line in res.stderr.splitlines():
+        if "Duration:" in line:
+            dur_str = line.split("Duration:")[1].split(",")[0].strip()
+            parts = dur_str.split(":")
+            if len(parts) == 3:
+                h, m, s = parts
+                return float(h) * 3600 + float(m) * 60 + float(s)
+    return 0.0
 
 def cut_silence(input_video, output_video, silence_thresh_db=-30, min_silence_sec=0.4, padding=0.08):
     """
@@ -55,9 +78,10 @@ def cut_silence(input_video, output_video, silence_thresh_db=-30, min_silence_se
     duration = get_video_duration(input_video)
     silences = detect_silence_ffmpeg(input_video, silence_thresh_db, min_silence_sec)
     
+    ffmpeg_bin = get_ffmpeg_binary()
     if not silences:
         print("⚡ No long silences found. Copying input to output...")
-        cmd = ["ffmpeg", "-y", "-i", input_video, "-c", "copy", output_video]
+        cmd = [ffmpeg_bin, "-y", "-i", input_video, "-c", "copy", output_video]
         subprocess.run(cmd, check=True)
         return output_video
     
@@ -87,7 +111,7 @@ def cut_silence(input_video, output_video, silence_thresh_db=-30, min_silence_se
     filter_complex = "".join(filter_parts) + "".join(concat_inputs) + f"concat=n={len(speech_chunks)}:v=1:a=1[outv][outa]"
     
     cmd = [
-        "ffmpeg", "-y", "-i", input_video,
+        ffmpeg_bin, "-y", "-i", input_video,
         "-filter_complex", filter_complex,
         "-map", "[outv]", "-map", "[outa]",
         "-c:v", "libx264", "-preset", "fast", "-crf", "18",

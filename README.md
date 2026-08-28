@@ -1,4 +1,4 @@
-# 🎬 Reel Agent Skill (AI Automated Video Editor)
+# 🎬 AI Reel Editor Pro (Reel Agent Skill)
 
 <div align="center">
 
@@ -7,9 +7,9 @@
 ![Remotion](https://img.shields.io/badge/Remotion-4.0+-purple.svg)
 ![Whisper](https://img.shields.io/badge/Whisper-Faster--Whisper-orange.svg)
 
-**أداة ومهارة ذكاء اصطناعي (AI Agent Skill) للمونتاج التلقائي لفيديوهات الريلز، تيك توك، ويوتيوب شورتس.**
+**محرر ومخرج فيديو ذكي متكامل (AI Video Director & Editor) لإنتاج فيديوهات ريلز، تيك توك، ويوتيوب شورتس 9:16 تلقائياً بأعلى جودة.**
 <br />
-*Automate Silence Removal (Jump-Cuts), Kinetic Word-Level Subtitles, Glassmorphic Explainer Cards, and 60FPS 9:16 Video Rendering.*
+*Autonomous Silence Removal, Faster-Whisper Arabic Transcription, AI Director Edit Planning, Kinetic RTL Typography, Dynamic Punch Zooms, Multi-Overlay Timeline, Audio Ducking, and QC Validator.*
 
 </div>
 
@@ -17,28 +17,28 @@
 
 ## 🌟 الميزات الأساسية (Key Features)
 
-- ✂️ **قص السكتات التلقائي (Auto Jump-Cuts):** يكتشف فترات الصمت ويحذفها تلقائياً للحصول على إيقاع سريع (Fast-Paced).
-- 🎙️ **كابشنز تفاعلية متحركة (Kinetic Subtitles):** يستخرج الكلام بدقة المللي ثانية عبر **Whisper**، ويلون الكلمة المنطوقة مع تكبيرها وإضافة إيموجي تلقائي.
-- 💡 **كروت وشاشات توضيحية (Glassmorphic Info Cards):** ظهور كروت أنيقة بانتقالات ناعمة لشرح المفاهيم أو الأكواد.
-- 📐 **أبعاد 9:16 بجودة 60FPS:** رندر عالي الجودة متوافق مع إنستغرام وتيك توك.
-- 📊 **شريط تقدم متفاعل (Dynamic Progress Bar):** لزيادة نسبة إكمال المشاهدين للفيديو.
-- 🤖 **AI Agent Native:** مصمم ليعمل كـ **Skill** يستدعيه الـ AI Agent (Antigravity, Claude, OpenCode, Codex) بضغطة زر.
+- ✂️ **قص السكتات التلقائي الذكي (Speech-Aware Silence Trimming):** حذف فترات الصمت الميتة مع الحفاظ على وتيرة التنفس والوقفات الدرامية للمتحدث.
+- 🎙️ **تفريغ دقيق باللغة العربية واللهجات (Faster-Whisper):** يدعم اللهجة العراقية والعربية الفصحى مع توحيد الأحرف وتقطيع الجمل المعنوية حسب الوقفات وعلامات الترقيم.
+- 🧠 **المخرج الذكي (AI Director / Edit Planner):** تحليل دلالي للنص وتوليد خطة مونتاج متكاملة (`edit_plan.json`) تحدد نقاط الجذب (Hooks)، حركات الزووم التكتيكي، والبطاقات التوضيحية.
+- 📐 **طباعة عربية وتوافق RTL كامل:** دعم اتجاه اليمين لليسار (`direction: rtl`) وعزل النصوص ثنائية الاتجاه مع خطوط Google Fonts (Cairo, Tajawal, Readex Pro) و 5 ثيمات مظهرية (`box_glass`, `neon`, `bold_yellow`, `clean_white`, `cyber`).
+- 🔍 **زووم تفاعلي ذكي (Punch-in Smart Zooms):** حركات تقريب ديناميكية عند الكلمات المفتاحية والأرقام لرفع نسبة المشاهدة والتفاعل.
+- 🎴 **نظام الطبقات المتعددة (Multi-Overlay Timeline):** بطاقات زجاجية، اقتباسات، إحصائيات ونسب، قوائم نقطية، وأكواد برمجية.
+- 🎵 **محرك الصوت والـ Audio Ducking:** خفض صوت الموسيقى الخلفية تلقائياً أثناء كلام المتحدث ورفعها أثناء الوقفات.
+- 🛡️ **فحص الجودة الآلي (Quality Control Validator):** فحص تلقائي بعد الرندر للتأكد من أبعاد 1080x1920، عدد الفريمات، ومزامنة الصوت.
 
 ---
 
 ## 🔄 مسار العمل (How the Workflow Works)
 
 ```mermaid
-graph TD
-    A[📹 Raw Video فيديو خام] --> B[1. Auto-Cut Silence قص السكتات]
-    B --> C[2. Whisper Transcription تفريغ الصوت بالمللي ثانية]
-    C --> D[3. Dynamic Remotion Timeline تركيب الطبقات والأنيميشن]
-    D --> E[🎬 Final 9:16 Reel فيديو ريلز جاهز للنشر]
+flowchart TD
+    A[📹 Raw Video فيديو خام] --> B[1. Auto-Cut Silence قص السكتات والوقفات]
+    B --> C[2. Whisper Transcription تفريغ الكلمات بدقة المللي ثانية]
+    C --> D[3. AI Director المخرج الذكي وتوليد edit_plan.json]
+    D --> E[4. Remotion Render رندر طبقات الفيديو بدقة 1080x1920 60FPS]
+    E --> F[5. QC Validator التحقق من جودة الفيديو]
+    F --> G[🎬 Final Reel فيديو ريلز احترافي جاهز للنشر]
 ```
-
-1. **التقطيع:** يقوم `scripts/cut_silence.py` بتحليل الترددات الصوتية وقص الصمت وتصدير فيديو مقصوص.
-2. **الكابشنز:** يقوم `scripts/transcribe.py` بربط كل كلمة بتوقيت ظهورها بالمللي ثانية وإضافة الإيموجيز المناسبة.
-3. **الرندر:** يقوم `Remotion` بتركيب طبقات الفيديو، التكبير البصري (Zoom-in)، الكرت التوضيحي، وحرق الكابشنز بدقة 1080x1920 بمعدل 60 إطار في الثانية.
 
 ---
 
@@ -63,35 +63,44 @@ npm install
 
 ## 💻 الاستخدام (Usage)
 
-### تشغيل البايبلاين بالكامل (Full Pipeline):
+### تشغيل البايبلاين بالكامل (Full Autonomous Pipeline):
 
 ```bash
 python scripts/pipeline.py \
   --input "path/to/raw_video.mp4" \
   --output "output/final_reel.mp4" \
-  --title "شرح احترافي" \
-  --card-text "الذكاء الاصطناعي يصنع فيديوهات بالكامل!" \
-  --card-start 2.5 \
-  --highlight-color "#FFE600"
+  --title "سر الذكاء الاصطناعي" \
+  --theme "box_glass" \
+  --whisper-model "turbo" \
+  --lang "ar" \
+  --fps 60
 ```
 
-### المعاينة المباشرة (Live Preview):
-لمعاينة الفيديو والتعديل على العناصر والأنيميشن في المتصفح لحظياً:
+### خيارات الـ CLI المتاحة:
+- `--input`: مسار الفيديو الأصلي (إجباري).
+- `--output`: مسار حفظ الفيديو النهائي الممنتج (افتراضي: `output/final_reel.mp4`).
+- `--title`: عنوان الهوك الافتتاحي في بداية الفيديو.
+- `--theme`: نمط الخط والكابشنز (`box_glass`, `neon`, `bold_yellow`, `clean_white`, `cyber`).
+- `--whisper-model`: موديل Whisper (`base`, `small`, `medium`, `large-v3`, `turbo`).
+- `--lang`: لغة الصوت (`ar`, `en`, `auto`).
+- `--bgm`: مسار ملف موسيقى خلفية لتفعيل ميزة الخفض التلقائي أثناء الكلام (Audio Ducking).
+- `--fps`: معدل الإطارات (30 أو 60).
+- `--skip-qc`: تخطي مرحلة فحص الجودة بعد الرندر.
+
+### المعاينة المباشرة (Live Interactive Studio):
+لمعاينة الفيديو والطبقات والتفاعل مع التايملاين عبر المتصفح:
 ```bash
 npm start
 ```
 
 ---
 
-## 🤖 كيف يستخدمه الـ AI Agent؟
+## 🤖 تكامل الـ AI Agents
 
-عند إضافة هذا المجلد كـ **Skill** للـ AI Agent (داخل `.agents/skills/reel-agent-skill` أو مساحة العمل):
-يمكنك فقط أن تقول للـ Agent في الشات:
-> *"سويلي ريلز احترافي للفيديو `raw.mp4`، وضفلي كرت توضيحي بالثانية 3 يشرح فكرة المشروع"*
-
-وسيقوم الـ Agent بتنفيذ السكربتات وتوليد الفيديو النهائي فوراً!
+مصمم ليعمل كـ **Skill** يستدعيه أي وكيل ذكاء اصطناعي (Antigravity, Claude, OpenCode, Codex):
+> *"سويلي ريلز احترافي للفيديو `input.mp4` بثيم النيون مع كروت توضيحية"*
 
 ---
 
-## 📄 License
+## 📄 الترخيص (License)
 MIT License © [Aliw02](https://github.com/Aliw02)
