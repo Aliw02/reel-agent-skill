@@ -125,6 +125,12 @@ export const Subtitles: React.FC<SubtitlesProps> = ({
     }
   };
 
+  const secondaryFontFamily =
+    styleConfig?.secondaryFontFamily ||
+    "'Inter', 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+  const secondaryFontSize = styleConfig?.secondaryFontSize || Math.round(fontSize * 0.58);
+  const secondaryColor = styleConfig?.secondaryColor || "#94A3B8";
+
   return (
     <div
       style={{
@@ -145,72 +151,95 @@ export const Subtitles: React.FC<SubtitlesProps> = ({
         unicodeBidi: "isolate",
       }}
     >
-      <div style={getContainerStyle()}>
-        {currentChunk.words.map((w, idx) => {
-          const isWordActive = frame >= w.startFrame && frame <= w.endFrame;
+      <div
+        style={{
+          ...getContainerStyle(),
+          flexDirection: "column",
+          gap: "8px",
+        }}
+      >
+        {/* Primary Line: Spoken Arabic with Active Word Glow */}
+        <div
+          style={{
+            display: "flex",
+            flexWrap: "wrap",
+            justifyContent: "center",
+            alignItems: "center",
+            gap: "12px",
+            direction,
+          }}
+        >
+          {currentChunk.words.map((w, idx) => {
+            const isWordActive = frame >= w.startFrame && frame <= w.endFrame;
 
-          // Deterministic frame-based spring bounce for active word (No CSS transition)
-          let wordScale = 1;
-          if (isWordActive) {
-            const wordProgress = spring({
-              frame: frame - w.startFrame,
-              fps,
-              config: { damping: 12, mass: 0.3, stiffness: 220 },
-            });
-            wordScale = interpolate(wordProgress, [0, 1], [1.0, 1.14]);
-          }
+            // Deterministic frame-based spring bounce for active word
+            let wordScale = 1;
+            if (isWordActive) {
+              const wordProgress = spring({
+                frame: frame - w.startFrame,
+                fps,
+                config: { damping: 12, mass: 0.3, stiffness: 220 },
+              });
+              wordScale = interpolate(wordProgress, [0, 1], [1.0, 1.12]);
+            }
 
-          // Determine word color
-          let color = inactiveColor;
-          if (isWordActive) {
-            color = activeColor;
-          } else if (w.highlight) {
-            color = highlightColor;
-          }
+            // Determine word color
+            let color = inactiveColor;
+            if (isWordActive) {
+              color = activeColor;
+            } else if (w.highlight) {
+              color = highlightColor;
+            }
 
-          // Determine text shadow per theme
-          let textShadow = "0 3px 8px rgba(0, 0, 0, 0.9)";
-          if (isWordActive) {
-            textShadow = `0 0 24px ${activeColor}, 0 4px 10px rgba(0, 0, 0, 0.9)`;
-          } else if (w.highlight) {
-            textShadow = `0 0 16px ${highlightColor}, 0 3px 8px rgba(0, 0, 0, 0.8)`;
-          }
+            // Determine text shadow per theme
+            let textShadow = "0 3px 8px rgba(0, 0, 0, 0.9)";
+            if (isWordActive) {
+              textShadow = `0 0 24px ${activeColor}, 0 4px 10px rgba(0, 0, 0, 0.9)`;
+            } else if (w.highlight) {
+              textShadow = `0 0 16px ${highlightColor}, 0 3px 8px rgba(0, 0, 0, 0.8)`;
+            }
 
-          return (
-            <span
-              key={idx}
-              dir="auto"
-              style={{
-                fontFamily,
-                fontSize,
-                fontWeight: 900,
-                color,
-                // CRITICAL FIX FOR ARABIC: Do not use uppercase or letterSpacing on Arabic text
-                textTransform: isArabic ? "none" : styleConfig?.uppercase ? "uppercase" : "none",
-                letterSpacing: isArabic ? "normal" : "0.5px",
-                lineHeight: 1.25,
-                textShadow,
-                transform: `scale(${wordScale})`,
-                display: "inline-block",
-                unicodeBidi: "plaintext",
-              }}
-            >
-              {w.word}
-            </span>
-          );
-        })}
+            return (
+              <span
+                key={idx}
+                dir="auto"
+                style={{
+                  fontFamily,
+                  fontSize,
+                  fontWeight: 900,
+                  color,
+                  textTransform: isArabic ? "none" : styleConfig?.uppercase ? "uppercase" : "none",
+                  letterSpacing: isArabic ? "normal" : "0.5px",
+                  lineHeight: 1.25,
+                  textShadow,
+                  transform: `scale(${wordScale})`,
+                  display: "inline-block",
+                  unicodeBidi: "plaintext",
+                }}
+              >
+                {w.word}
+              </span>
+            );
+          })}
+        </div>
 
-        {currentChunk.emoji && (
-          <span
+        {/* Secondary Line: Executive English Subtitle Translation (Zero Emojis) */}
+        {currentChunk.translation && (
+          <div
             style={{
-              fontSize: fontSize * 1.1,
-              filter: "drop-shadow(0 4px 12px rgba(0,0,0,0.6))",
-              display: "inline-block",
-              marginInlineStart: 8,
+              fontFamily: secondaryFontFamily,
+              fontSize: secondaryFontSize,
+              fontWeight: 600,
+              color: secondaryColor,
+              letterSpacing: "0.4px",
+              lineHeight: 1.2,
+              direction: "ltr",
+              textShadow: "0 2px 6px rgba(0,0,0,0.8)",
+              opacity: 0.9,
             }}
           >
-            {currentChunk.emoji}
-          </span>
+            {currentChunk.translation}
+          </div>
         )}
       </div>
     </div>

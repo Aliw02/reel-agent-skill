@@ -3,7 +3,10 @@ import { Composition, CalculateMetadataFunction } from "remotion";
 import { ReelComposition } from "./ReelComposition";
 import { ReelProps } from "./types/schema";
 
-const defaultProps: ReelProps = {
+const defaultV3Props: ReelProps = {
+  version: "3.0.0",
+  videoSrc: "trimmed.mp4",
+  cutoutVideoSrc: "cutout.mp4",
   durationInFrames: 300,
   fps: 60,
   width: 1080,
@@ -12,8 +15,8 @@ const defaultProps: ReelProps = {
   hook: {
     enabled: true,
     title: "أتمتة الفيديوهات بالذكاء الاصطناعي",
-    subtitle: "AI Reel Editor Pro",
-    durationInFrames: 75,
+    subtitle: "AI Reel Director V3",
+    durationInFrames: 80,
   },
   captionStyle: {
     theme: "box_glass",
@@ -23,8 +26,15 @@ const defaultProps: ReelProps = {
     activeWordColor: "#00FFCC",
     inactiveWordColor: "#FFFFFF",
     direction: "rtl",
-    positionBottom: 340,
+    positionBottom: 320,
     uppercase: false,
+    animation: "bounce",
+  },
+  waveform: {
+    enabled: true,
+    color: "#00FFCC",
+    barsCount: 20,
+    position: "bottom",
   },
   progressBar: {
     enabled: true,
@@ -32,71 +42,110 @@ const defaultProps: ReelProps = {
     height: 8,
     position: "top",
   },
+  scenes: [
+    {
+      id: "scene_001_hook",
+      startFrame: 0,
+      endFrame: 90,
+      layout: "talking_head_typography",
+      intent: "hook",
+      energy: "high",
+      transitionIn: "hard_cut",
+      transitionOut: "glitch_slice",
+      backgroundTypography: {
+        text: "ذكاء اصطناعي",
+        subText: "NEXT-GEN VIDEO",
+        glowColor: "#FFE600",
+        fontSize: 88,
+        opacity: 0.9,
+      },
+    },
+    {
+      id: "scene_002_stat",
+      startFrame: 90,
+      endFrame: 210,
+      layout: "stat_pip",
+      intent: "statistic",
+      energy: "high",
+      transitionIn: "zoom_cut",
+      transitionOut: "hard_cut",
+      animatedCounter: {
+        startVal: 0,
+        endVal: 10,
+        suffix: "x",
+        title: "سرعة الإنتاج",
+        subtitle: "أسرع بـ 10 أضعاف مقارنة بالمونتاج اليدوي",
+        durationInFrames: 60,
+      },
+    },
+    {
+      id: "scene_003_outro",
+      startFrame: 210,
+      endFrame: 300,
+      layout: "talking_head_full",
+      intent: "cta",
+      energy: "medium",
+      transitionIn: "hard_cut",
+      transitionOut: "none",
+    },
+  ],
+  transitions: [
+    {
+      type: "glitch_slice",
+      startFrame: 82,
+      durationInFrames: 12,
+      intensity: 0.8,
+    },
+    {
+      type: "zoom_cut",
+      startFrame: 205,
+      durationInFrames: 8,
+    },
+  ],
   subtitles: [
     {
       id: 1,
       startFrame: 0,
-      endFrame: 90,
-      text: "مرحباً بكم في محرر الفيديوهات الذكي",
+      endFrame: 85,
+      text: "مرحباً بكم في محرر الفيديوهات الذكي V3",
       emoji: "👋",
       emphasisLevel: "high",
       words: [
-        { word: "مرحباً", start: 0, end: 0.4, startFrame: 0, endFrame: 24, highlight: false },
-        { word: "بكم", start: 0.4, end: 0.7, startFrame: 24, endFrame: 42, highlight: false },
-        { word: "في", start: 0.7, end: 0.9, startFrame: 42, endFrame: 54, highlight: false },
-        { word: "محرر", start: 0.9, end: 1.2, startFrame: 54, endFrame: 72, highlight: true },
-        { word: "الفيديوهات", start: 1.2, end: 1.5, startFrame: 72, endFrame: 90, highlight: true },
+        { word: "مرحباً", start: 0, end: 0.35, startFrame: 0, endFrame: 21, highlight: false },
+        { word: "بكم", start: 0.35, end: 0.65, startFrame: 21, endFrame: 39, highlight: false },
+        { word: "في", start: 0.65, end: 0.85, startFrame: 39, endFrame: 51, highlight: false },
+        { word: "محرر", start: 0.85, end: 1.15, startFrame: 51, endFrame: 69, highlight: true },
+        { word: "الذكاء", start: 1.15, end: 1.42, startFrame: 69, endFrame: 85, highlight: true },
       ],
     },
     {
       id: 2,
-      startFrame: 95,
-      endFrame: 240,
-      text: "ذكاء اصطناعي يفهم المحتوى ويمونتج باحتراف 🚀",
+      startFrame: 90,
+      endFrame: 205,
+      text: "إنتاج محتوى احترافي بسرعة تفوق الخيال 🚀",
       emoji: "🤖",
       emphasisLevel: "punchline",
       words: [
-        { word: "ذكاء", start: 1.6, end: 1.9, startFrame: 96, endFrame: 114, highlight: true },
-        { word: "اصطناعي", start: 1.9, end: 2.3, startFrame: 114, endFrame: 138, highlight: true },
-        { word: "يفهم", start: 2.3, end: 2.6, startFrame: 138, endFrame: 156, highlight: false },
-        { word: "المحتوى", start: 2.6, end: 3.0, startFrame: 156, endFrame: 180, highlight: true },
-        { word: "ويمونتج", start: 3.0, end: 3.5, startFrame: 180, endFrame: 210, highlight: false },
-        { word: "باحتراف", start: 3.5, end: 4.0, startFrame: 210, endFrame: 240, emoji: "🚀", highlight: true },
+        { word: "إنتاج", start: 1.5, end: 1.8, startFrame: 90, endFrame: 108, highlight: false },
+        { word: "محتوى", start: 1.8, end: 2.1, startFrame: 108, endFrame: 126, highlight: true },
+        { word: "احترافي", start: 2.1, end: 2.5, startFrame: 126, endFrame: 150, highlight: true },
+        { word: "بسرعة", start: 2.5, end: 2.9, startFrame: 150, endFrame: 174, highlight: false },
+        { word: "تفوق", start: 2.9, end: 3.2, startFrame: 174, endFrame: 192, highlight: false },
+        { word: "الخيال", start: 3.2, end: 3.42, startFrame: 192, endFrame: 205, highlight: true },
       ],
-    },
-  ],
-  overlays: [
-    {
-      id: "intro-card",
-      type: "card",
-      startFrame: 30,
-      durationInFrames: 150,
-      title: "نظام المونتاج الذكي",
-      text: "تفريغ دقيق، زوم ذكي، طبقات توضيحية، وإخراج رأسي 9:16 احترافي",
-      icon: "💡",
-      theme: "glass",
-    },
-  ],
-  zoomEvents: [
-    {
-      id: "zoom-1",
-      startFrame: 95,
-      durationInFrames: 60,
-      scale: 1.14,
-      originX: "50%",
-      originY: "40%",
-      type: "punch_in",
     },
   ],
 };
 
-const calculateMetadata: CalculateMetadataFunction<ReelProps> = async ({ props }) => {
+const calculateMetadata: CalculateMetadataFunction<ReelProps> = async ({
+  props,
+}) => {
   const durationInFrames =
     props?.durationInFrames && props.durationInFrames > 0
       ? props.durationInFrames
       : (props as any)?.totalFrames && (props as any).totalFrames > 0
       ? (props as any).totalFrames
-      : defaultProps.durationInFrames;
+      : defaultV3Props.durationInFrames;
 
   const fps = props?.fps && props.fps > 0 ? props.fps : 60;
   const width = props?.width && props.width > 0 ? props.width : 1080;
@@ -121,7 +170,7 @@ export const RemotionRoot: React.FC = () => {
         fps={60}
         width={1080}
         height={1920}
-        defaultProps={defaultProps}
+        defaultProps={defaultV3Props}
         calculateMetadata={calculateMetadata}
       />
     </>

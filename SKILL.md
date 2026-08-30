@@ -1,163 +1,144 @@
 ---
 name: reel-agent-skill
-description: Use when editing, trimming, directing, or producing vertical 9:16 video reels (TikTok, Shorts, Reels) from raw footage, generating kinetic RTL Arabic or multilingual subtitles, orchestrating AI camera zooms, or adding motion graphics overlays.
+description: Use when editing, trimming, directing, or producing vertical 9:16 video reels (TikTok, Shorts, Reels) from raw footage with interactive step-by-step approval, bilingual kinetic subtitles, 3D motion graphics, or smart camera zooms.
 ---
 
-# Reel Agent Skill: AI Video Editor & Motion Graphics Director
+# Reel Agent Skill: Hollywood-Tier Interactive AI Video Director
 
 ## Overview
 
-Automated post-production engine for transforming raw talking-head footage into high-retention 9:16 vertical video reels. Orchestrates speech-aware silence cutting, word-level Whisper transcription, dialect auditing, dynamic camera choreography, contextual motion graphics, audio ducking, and 60FPS Remotion multi-layer rendering.
+Interactive post-production director and co-editor for transforming raw talking-head footage into high-retention 9:16 vertical video reels. Operates via **strict step-by-step visual approval gates**: every phase renders an observable preview asset, provides an artistic director critique, and halts for user review before proceeding.
 
 ---
 
-## Quick Reference Commands
+## Core Invariants & Quality Standards
 
-| Task | Command | Primary Output | Completion Check |
-| :--- | :--- | :--- | :--- |
-| **All-in-One Pipeline** | `python scripts/pipeline.py --input "<raw.mp4>" --output "output/final.mp4"` | `output/final.mp4` | Video rendered & QC passed |
-| **Silence Trimming** | `python scripts/cut_silence.py --input "<raw.mp4>" --output ".temp/trimmed.mp4"` | `.temp/trimmed.mp4` | Dead air cut, duration reduced |
-| **Transcription** | `python scripts/transcribe.py --audio ".temp/trimmed.mp4" --output ".temp/captions.json"` | `.temp/captions.json` | Word-level timestamps generated |
-| **Direct Edit Plan** | `python scripts/director.py --transcript ".temp/captions.json" --output ".temp/edit_plan.json"` | `.temp/edit_plan.json` | Valid `ReelProps` JSON assembled |
-| **Remotion Render** | `npx remotion render src/index.ts ReelComposition output/final.mp4 --props=.temp/edit_plan.json --gl=angle` | `output/final.mp4` | 1080x1920 MP4 at 60FPS |
-| **Quality Control** | `python scripts/qc.py --video "output/final.mp4" --edit-plan ".temp/edit_plan.json"` | `.temp/qc_report.json` | Resolution & audio verified |
-| **Live Studio Preview** | `npm start` | Web UI at `localhost:3000` | Real-time timeline scrubbing |
+1. **Strict Interactive Approval Gates**: Never execute the entire pipeline in an unguided monolithic batch. Complete one stage, render an observable preview (`.mp4`, contact sheet, or Studio preview), critique the visual result, and obtain explicit user approval before moving to the next stage.
+2. **Executive Bilingual Kinetic Subtitles (Zero Emojis)**:
+   - **No Emojis**: Emojis are strictly prohibited to maintain an elite, executive creator aesthetic.
+   - **Bilingual Stacking**: Primary spoken Arabic on top (bold, high contrast, active word spring glow), secondary English translation underneath (subtle `#94A3B8` platinum subtitle).
+   - **Natural Phrase Units**: Group subtitles by semantic meaning (2–5 words per natural speech breath), never arbitrary mechanical word chops.
+3. **Hollywood Motion Design & 3D Layering**:
+   - **3D Floating Elements**: Tilt graphics with `perspective` and `rotateX/rotateY` to create depth.
+   - **Numeric Counters**: Animate spoken figures, metrics, and percentages with dynamic counting up/down.
+   - **Clean Full-Frame Video**: Keep the speaker unmasked and crisp (no artificial translucent egg masks).
+4. **Dynamic Camera Choreography & Sound Design**:
+   - **Smart Punch-in Zooms**: Spring zoom (1.12x–1.18x) centered on speaker eye level on emphasized sentences.
+   - **Synchronized SFX**: Pair visual card entrances, zooms, and transitions with subtle whooshes, pops, and impacts.
+   - **Mastered Audio**: Voice leveled to -16 LUFS with smooth dynamic background music ducking.
 
 ---
 
-## 6-Stage Execution Pipeline
+## 4-Stage Interactive Directorial Pipeline
 
 ```
 [Raw Footage]
       │
       ▼
-Stage 1: Silence Trimming (cut_silence.py)
-      │
-      ▼
-Stage 2: Word-Level Transcription (transcribe.py)
-      │
-      ▼
-Stage 3: Dialect & Semantic Caption Audit (Agent Review)
-      │
-      ▼
-Stage 4: Autonomous Directing & Edit Planning (director.py -> edit_plan.json)
-      │
-      ▼
-Stage 5: Remotion 60FPS Multi-Layer Render (remotion render)
-      │
-      ▼
-Stage 6: Automated Quality Control (qc.py)
+┌─────────────────────────────────────────────────────────────┐
+│ Stage 1: Pacing & Speech-Aware Silence Trimming             │
+│ Output: .temp/trimmed.mp4                                   │
+│ Gate: Review trimmed preview video & confirm timing         │
+└──────────────────────────────┬──────────────────────────────┘
+                               │ (User Approved)
+                               ▼
+┌─────────────────────────────────────────────────────────────┐
+│ Stage 2: Bilingual Caption Generation & Dialect Audit       │
+│ Output: .temp/captions_reviewed.json                        │
+│ Gate: Review Arabic text, English translation & phrase cuts │
+└──────────────────────────────┬──────────────────────────────┘
+                               │ (User Approved)
+                               ▼
+┌─────────────────────────────────────────────────────────────┐
+│ Stage 3: 3D Motion Graphics, Camera Choreography & Preview  │
+│ Output: .temp/edit_plan.json + Remotion Studio Live Preview │
+│ Gate: Review 3D cards, punch zooms, counters & transitions  │
+└──────────────────────────────┬──────────────────────────────┘
+                               │ (User Approved)
+                               ▼
+┌─────────────────────────────────────────────────────────────┐
+│ Stage 4: Audio Mastering, SFX & Master 60FPS/30FPS Render   │
+│ Output: output/final_reel.mp4 + visual_qc_contact_sheet.jpg │
+│ Gate: Verify QC report and inspect final rendered reel      │
+└─────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-### Stage 1: Multimodal Ingestion & Speech-Aware Silence Trimming
+### Stage 1: Speech-Aware Silence Trimming & Pacing
 
-1. **Multimodal Inspection**: Inspect raw footage (`view_file` on video asset) to determine the speaker's screen position (center, left, right) and locate open negative space for graphics.
-2. **Execute Silence Trimming**:
+1. **Analyze Audio & Trim Dead Air**:
    ```bash
-   python scripts/cut_silence.py --input "template/raw_before.mp4" --output ".temp/trimmed.mp4" --silence-thresh -30
+   python scripts/cut_silence.py --input "<raw_video.mp4>" --output ".temp/trimmed.mp4" --silence-thresh -30
    ```
-3. **Completion Criterion**: `.temp/trimmed.mp4` exists with valid video/audio streams and total duration shortened without clipping active speech.
+2. **Present Visual Preview & Director Critique**:
+   - Inspect `.temp/trimmed.mp4` duration and cuts.
+   - Report cut duration, remaining length, and pacing quality to the user.
+3. **Completion Criterion**: User reviews and approves `.temp/trimmed.mp4` before any transcription or graphics work begins.
 
 ---
 
-### Stage 2: Word-Level Audio Transcription
+### Stage 2: Bilingual Kinetic Captions & Semantic Dialect Audit
 
-1. **Execute Transcription**:
+1. **Transcribe Spoken Speech**:
    ```bash
-   python scripts/transcribe.py --audio ".temp/trimmed.mp4" --output ".temp/captions.json" --model "turbo" --language "ar" --fps 60
+   python scripts/transcribe.py --audio ".temp/trimmed.mp4" --output ".temp/captions.json" --model "turbo" --language "ar" --fps 30
    ```
-2. **Completion Criterion**: `.temp/captions.json` contains structured `subtitles` chunks with word-level millisecond `start`, `end`, `startFrame`, and `endFrame` timestamps.
+2. **Audit Arabic & Generate English Subtitle Translation**:
+   - Correct phonetic nuances, regional dialects (Iraqi, Levantine, Egyptian, Gulf), and technical terms.
+   - Translate each Arabic sentence chunk into a clean, modern English secondary line.
+   - Ensure zero emojis are present across all chunks.
+   - Save verified bilingual payload to `.temp/captions_reviewed.json`.
+3. **Present Subtitle Review**:
+   - Display each phrase with its Arabic primary text, English translation, and start/end time.
+4. **Completion Criterion**: User approves the text accuracy, translation, and phrasing boundaries.
 
 ---
 
-### Stage 3: Dialect & Semantic Caption Audit
+### Stage 3: 3D Motion Graphics, Camera Choreography & Studio Preview
 
-1. **Audit Dialect Accuracy**: Review the raw transcription against the spoken audio. Correct phonetic misinterpretations common in Arabic regional dialects (Iraqi, Levantine, Egyptian, Gulf) or technical jargon.
-2. **Assign Emphasis Triggers**: Mark high-impact punchlines or key metrics with `highlight: true` or `emphasisLevel: "punchline"`.
-3. **Save Audited Captions**:
+1. **Synthesize Custom Edit Plan**:
    ```bash
-   # Save verified captions to .temp/captions_reviewed.json
+   python scripts/director.py --transcript ".temp/captions_reviewed.json" --output ".temp/edit_plan.json" --theme "box_glass" --fps 30
    ```
-4. **Completion Criterion**: Audited caption file exists with accurate spellings, intact word timestamps, and identified emphasis markers.
+2. **Directorial Additions**:
+   - **Gestures & Negative Space**: Position 3D cards and badges opposite speaker eye gaze.
+   - **Spoken Metrics**: Insert `AnimatedCounter` scenes or PIP cards for spoken numbers.
+   - **Emphasis Zooms**: Add `punch_in` zoom events (scale 1.15x) anchored on `[0.50, 0.38]`.
+   - **Transitions**: Apply clean `zoom_cut` or subtle chromatic micro-flashes (avoid heavy neon glitch bars).
+3. **Launch & Direct Studio Preview**:
+   - Copy assets to `public/` and instruct user to scrub timeline in `npm start` (`http://localhost:3000`).
+   - Describe directorial choices (camera angles, card timings, color grade).
+4. **Completion Criterion**: User verifies composition, graphics placement, and camera movement in Remotion Studio.
 
 ---
 
-### Stage 4: Autonomous Directing & Edit Plan Synthesis
+### Stage 4: Audio Mastering, SFX & Master Quality Render
 
-Compile `.temp/edit_plan.json` conforming to [ReelProps](file:///d:/MyFolder/ProgrammingWith-Python/Ai/AiReelsEditor/src/types/schema.ts#L157-L179):
-
-```bash
-python scripts/director.py --transcript ".temp/captions_reviewed.json" --output ".temp/edit_plan.json" --theme "box_glass" --fps 60
-```
-
-#### Directorial Subsystems
-
-1. **Hook Header (0–3 Seconds)**:
-   - Configure attention-grabbing title banner (`hook.title` and `hook.subtitle`) with a 60–90 frame duration.
-2. **Camera Choreography (`zoomEvents`)**:
-   - `punch_in`: Quick spring push-in (scale 1.15–1.20) on high-energy words or punchlines.
-   - `slow_zoom_in`: Gradual push-in (scale 1.05–1.12) to build tension or intimacy during explanations.
-   - `slow_zoom_out`: Smooth pull-out returning to standard framing for scene transitions.
-   - `snap`: Instant 1-frame punch cut on surprise statements.
-   - `shake`: Sinusoidal camera oscillation on explosive impact moments.
-3. **Contextual Motion Graphics & Media Overlays (`mediaOverlays` / `overlays`)**:
-   - Place media cards and sticker graphics in open negative space quadrants (`top-right`, `top-left`, `bottom-right`), leaving the speaker's face and gestures unobstructed.
-   - Apply spring entrance with subtle rotation ($-8^\circ \to 0^\circ$).
-4. **Kinetic RTL Typography (`captionStyle`)**:
-   - Themes: `box_glass` (glassmorphism), `neon` (cyber glow), `bold_yellow` (high contrast), `clean_white`, `cyber`.
-   - Font stack: `'Tajawal', 'Cairo', 'Readex Pro', sans-serif`, `direction: "rtl"`.
-5. **Smart Audio Ducking (`audio`)**:
-   - Background music (`bgmVolume: 0.15`) smoothly attenuates (`duckingVolume: 0.04`) during active speech frames and swells during dramatic pauses.
-
-**Completion Criterion**: `.temp/edit_plan.json` validates against the TypeScript schema with all referenced assets existing in `public/` or `.temp/`.
-
----
-
-### Stage 5: Remotion 60FPS Multi-Layer Rendering
-
-1. **Copy Assets to Public**: Ensure `trimmed.mp4` and any background audio/images are in `public/`.
-2. **Execute Render**:
+1. **Master Loudness & Mix SFX**:
+   - Level dialogue to -16 LUFS.
+   - Bind SFX (`whoosh.mp3`, `pop.mp3`, `impact.mp3`) to transition and card entrance frames.
+2. **Execute Master Multi-Layer Render**:
    ```bash
-   npx remotion render src/index.ts ReelComposition output/final_reel.mp4 --props=.temp/edit_plan.json --gl=angle
+   node scripts/render_reel.js --plan .temp/edit_plan.json --output output/final_reel.mp4
    ```
-3. **Completion Criterion**: `output/final_reel.mp4` generates successfully with 0 exit code.
-
----
-
-### Stage 6: Automated Quality Control (QC)
-
-1. **Run QC Validator**:
+3. **Automated Technical & Visual QC**:
    ```bash
-   python scripts/qc.py --video "output/final_reel.mp4" --edit-plan ".temp/edit_plan.json"
+   python scripts/qc.py --video "output/final_reel.mp4" --plan ".temp/edit_plan.json"
    ```
-2. **Validation Rules**:
-   - Resolution is exactly `1080x1920` (9:16 vertical ratio).
-   - Audio stream exists with 44.1kHz or 48kHz sampling rate.
-   - Video duration matches `edit_plan.json` total frame count ($\pm 2$ frames).
-3. **Completion Criterion**: QC validator outputs `[SUCCESS]` and writes `.temp/qc_report.json` with zero critical errors.
+4. **Completion Criterion**: `output/final_reel.mp4` passes QC (`1080x1920`, exact duration, valid audio stream) and `.temp/visual_qc_contact_sheet.jpg` is presented to the user.
 
 ---
 
-## Directorial Rules & Placement Matrix
+## Directorial Placement & Styling Matrix
 
-| Element | Placement / Value | Directorial Rule |
+| Element | Specification | Directorial Rule |
 | :--- | :--- | :--- |
-| **Hook Banner** | Top (`top: 140px`, centered) | Active for first 1.5–2.5 seconds; clean entrance spring. |
-| **Subtitles** | Lower-third (`positionBottom: 320–380px`) | Placed above TikTok/Reels bottom UI buttons; RTL layout for Arabic. |
-| **Media Stickers** | `top-right` / `top-left` (`top: 10%`, `margin: 5%`) | Positioned in empty negative space opposite speaker gaze. |
-| **Punch Zooms** | Scale `1.14–1.20`, anchor `originY: "38–40%"` | Centered on speaker eyes; lasts 30–60 frames. |
-| **Progress Bar** | Top or bottom (`height: 6–8px`) | Continuous 0% to 100% gradient fill indicating video progression. |
-
----
-
-## Common Failure Modes & Fixes
-
-| Symptom | Root Cause | Fix |
-| :--- | :--- | :--- |
-| **Overlapping stickers on speaker face** | Hardcoded sticker coordinates | Inspect speaker position first; set coordinates in negative space quadrants. |
-| **Choppy or clipped words** | Overly aggressive silence threshold | Set `--silence-thresh -30` and ensure minimum silence length is $\ge 0.4$s. |
-| **Remotion asset loading error** | Relative paths not in `public/` directory | Use `staticFile()` helper and copy all source media into `public/`. |
-| **Subtitles out of sync with video** | Mismatch between trimmed video and transcription | Always transcribe the *trimmed* video (`.temp/trimmed.mp4`), never the raw pre-trim file. |
-| **TypeScript schema mismatch** | Missing fields in `edit_plan.json` | Ensure `edit_plan.json` adheres to `ReelProps` in [schema.ts](file:///d:/MyFolder/ProgrammingWith-Python/Ai/AiReelsEditor/src/types/schema.ts). |
+| **Top Hook Header** | `top: 130px`, dark glass pill capsule | Active for first 1.5–2.5s; font Cairo 800; no emojis. |
+| **Primary Arabic Text** | Font: *Cairo* / *Readex Pro*, Size: 54px | High contrast white, glowing golden/cyan active word bounce. |
+| **Secondary English Text**| Font: *Inter* / *Geist*, Size: 32px, Color: `#94A3B8` | Positioned directly underneath Arabic line. |
+| **Subtitle Vertical Position**| `bottom: 220px`–`240px` | Clear of bottom platform UI overlays and clear of speaker chest. |
+| **Punch-in Zooms** | Scale: 1.14x–1.18x, Origin: `[50%, 38%]` | 30–60 frame spring curves on high-energy speech sentences. |
+| **3D Floating Cards** | Top-left / Top-right negative space | 3D perspective tilt (`rotateY: -8deg`), smooth spring pop-in. |
+| **Color Grading** | Contrast: 1.05, Saturation: 1.08, Vignette: 0.35 | Clean, natural creator look without muddy darkness. |
+| **Audio Ducking** | BGM: 0.14 $\to$ 0.035 during speech | Smooth volume attenuation over 8 frames. |

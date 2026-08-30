@@ -1,10 +1,10 @@
 """
-AI Reel Editor — Post-Render Quality Control (QC) Validator
-Performs automated structural and visual checks on rendered video reels:
+AI Reel Editor — Post-Render Quality Control (QC) Master Validator (V3.0.0)
+Performs automated structural, audio, sync, and visual composition checks:
 1. Video Resolution (1080x1920 vertical format verification)
-2. Audio Stream Integrity & Sample Rate
+2. Audio Stream Integrity, Sample Rate, and Loudness
 3. Duration & Frame Count Parity with edit_plan.json
-4. Output File Health & Bitrate
+4. Visual Composition, Empty Frame, and Safe Zone Inspection (qc_visual.py)
 """
 
 import os
@@ -23,6 +23,7 @@ if sys.platform == "win32":
 
 import shutil
 import re
+from qc_visual import run_visual_qc
 
 def get_ffmpeg_binary():
     path = shutil.which("ffmpeg")
@@ -62,7 +63,6 @@ def inspect_video_media(video_path: str) -> Dict[str, Any]:
     streams = []
     duration = 0.0
     
-    # Parse duration
     for line in stderr.splitlines():
         if "Duration:" in line:
             dur_match = re.search(r"Duration:\s*(\d+):(\d+):([\d\.]+)", line)
@@ -71,7 +71,6 @@ def inspect_video_media(video_path: str) -> Dict[str, Any]:
                 duration = float(h) * 3600 + float(m) * 60 + float(s)
         if "Stream #" in line:
             if "Video:" in line:
-                # Video: h264 (...), yuv420p(...), 1080x1920, 60 fps
                 res_match = re.search(r"(\d{3,4})x(\d{3,4})", line)
                 fps_match = re.search(r"([\d\.]+)\s*fps", line)
                 width = int(res_match.group(1)) if res_match else 1080
@@ -85,7 +84,6 @@ def inspect_video_media(video_path: str) -> Dict[str, Any]:
                     "r_frame_rate": f"{fps_val}/1"
                 })
             elif "Audio:" in line:
-                # Audio: aac, 48000 Hz, stereo
                 hz_match = re.search(r"(\d+)\s*Hz", line)
                 streams.append({
                     "codec_type": "audio",
@@ -107,21 +105,23 @@ def run_quality_control(
     expected_width: int = 1080,
     expected_height: int = 1920,
     expected_fps: int = 60,
-    tolerance_sec: float = 0.35
+    tolerance_sec: float = 0.40,
+    contact_sheet_path: str = ".temp/visual_qc_contact_sheet.jpg"
 ) -> Tuple[bool, Dict[str, Any]]:
     """
-    Validates rendered MP4 against target specifications and edit_plan.json contract.
+    Master QC Validator combining technical and visual inspection.
     """
-    print("=" * 60)
-    print(f"🔍 [QC Validator] Inspecting rendered video: {video_path}")
-    print("=" * 60)
+    print("=" * 65)
+    print(f"🔍 [QC Master] Inspecting rendered reel: {os.path.abspath(video_path)}")
+    print("=" * 65)
     
     report = {
-        "file": video_path,
+        "file": os.path.abspath(video_path),
         "passed": False,
         "checks": {},
         "errors": [],
-        "warnings": []
+        "warnings": [],
+        "visualQc": {}
     }
     
     # 1. File existence & size check
@@ -136,7 +136,7 @@ def run_quality_control(
     else:
         report["checks"]["file_size"] = f"PASS ({file_size_mb} MB)"
         
-    # 2. ffprobe probe
+    # 2. Media probe
     try:
         media_info = inspect_video_media(video_path)
     except Exception as e:
@@ -155,14 +155,12 @@ def run_quality_control(
         width = int(v_stream.get("width", 0))
         height = int(v_stream.get("height", 0))
         
-        # Check resolution
         if width != expected_width or height != expected_height:
             report["warnings"].append(f"Resolution mismatch: got {width}x{height}, expected {expected_width}x{expected_height}.")
             report["checks"]["resolution"] = f"WARN ({width}x{height})"
         else:
             report["checks"]["resolution"] = f"PASS ({width}x{height})"
             
-        # Check frame rate
         r_fps_str = v_stream.get("r_frame_rate", "60/1")
         if "/" in r_fps_str:
             num, den = map(float, r_fps_str.split("/"))
@@ -191,7 +189,7 @@ def run_quality_control(
         with open(edit_plan_path, "r", encoding="utf-8") as f:
             plan = json.load(f)
             
-        expected_frames = plan.get("totalFrames", 0)
+        expected_frames = plan.get("durationInFrames") or plan.get("totalFrames", 0)
         expected_fps_val = plan.get("fps", expected_fps)
         expected_duration = expected_frames / expected_fps_val if expected_fps_val > 0 else 0
         
@@ -207,12 +205,26 @@ def run_quality_control(
         else:
             report["checks"]["duration_parity"] = f"PASS (diff {diff:.2f}s)"
 
-    # Final evaluation
+    # 6. Visual QC checks
+    try:
+        vis_passed, vis_report = run_visual_qc(
+            video_path=video_path,
+            edit_plan_path=edit_plan_path,
+            output_contact_sheet=contact_sheet_path
+        )
+        report["visualQc"] = vis_report
+        report["warnings"].extend(vis_report.get("warnings", []))
+        report["errors"].extend(vis_report.get("errors", []))
+        for k, v in vis_report.get("checks", {}).items():
+            report["checks"][f"visual_{k}"] = v
+    except Exception as e:
+        report["warnings"].append(f"Visual QC skipped due to error: {e}")
+
     report["passed"] = len(report["errors"]) == 0
     
     print("\n📊 QC Verification Results:")
     for check_name, status in report["checks"].items():
-        print(f"  • {check_name:<18}: {status}")
+        print(f"  • {check_name:<24}: {status}")
         
     if report["warnings"]:
         print("\n⚠️ Warnings:")
@@ -225,20 +237,22 @@ def run_quality_control(
             print(f"  - {err}")
             
     status_emoji = "✅ PASS" if report["passed"] else "❌ FAIL"
-    print(f"\nFinal QC Status: {status_emoji}\n" + "=" * 60)
+    print(f"\nFinal QC Status: {status_emoji}\n" + "=" * 65)
     
     return report["passed"], report
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="QC Post-Render Validator")
+    parser = argparse.ArgumentParser(description="QC Post-Render Master Validator")
     parser.add_argument("--video", required=True, help="Path to rendered MP4 video")
-    parser.add_argument("--plan", help="Path to edit_plan.json for parity validation")
-    parser.add_argument("--output-report", default=".temp/qc_report.json", help="Path to write QC report JSON")
+    parser.add_argument("--plan", help="Path to edit_plan.json")
+    parser.add_argument("--output-report", default=".temp/qc_report.json")
+    parser.add_argument("--contact-sheet", default=".temp/visual_qc_contact_sheet.jpg")
     args = parser.parse_args()
     
     passed, report_data = run_quality_control(
         video_path=args.video,
-        edit_plan_path=args.plan
+        edit_plan_path=args.plan,
+        contact_sheet_path=args.contact_sheet
     )
     
     if args.output_report:

@@ -117,13 +117,18 @@ def transcribe_video(
     else:
         compute_type = "float16" if device == "cuda" else "int8"
         
+    hf_cache = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".temp", "hf_cache"))
+    os.makedirs(hf_cache, exist_ok=True)
+    os.environ["HF_HOME"] = hf_cache
+    os.environ["HUGGINGFACE_HUB_CACHE"] = hf_cache
+
     print(f"🎙️ [Whisper] Loading model '{model_size}' on device '{device}' ({compute_type})...")
     
     try:
-        model = WhisperModel(model_size, device=device, compute_type=compute_type)
+        model = WhisperModel(model_size, device=device, compute_type=compute_type, download_root=hf_cache)
     except Exception as e:
         print(f"⚠️ [Whisper] Fallback to CPU int8 due to device error: {e}")
-        model = WhisperModel(model_size if model_size != "turbo" else "base", device="cpu", compute_type="int8")
+        model = WhisperModel(model_size if model_size != "turbo" else "base", device="cpu", compute_type="int8", download_root=hf_cache)
     
     # Transcription with word timestamps & VAD filter
     segments, info = model.transcribe(

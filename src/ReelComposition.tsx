@@ -3,6 +3,7 @@ import {
   AbsoluteFill,
   OffthreadVideo,
   Audio,
+  Sequence,
   Img,
   interpolate,
   spring,
@@ -10,7 +11,12 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
-import { ReelProps, ZoomEvent, ReframeEvent } from "./types/schema";
+import { ReelProps } from "./types/schema";
+import { SceneRenderer } from "./scenes/SceneRenderer";
+import { TransitionRenderer } from "./transitions/TransitionRenderer";
+import { Callouts } from "./graphics/Callouts";
+import { Waveform } from "./graphics/Waveform";
+import { ColorTreatment } from "./color/ColorTreatment";
 import { Subtitles } from "./components/Subtitles";
 import { Overlays } from "./components/Overlays";
 import { ProgressBar } from "./components/ProgressBar";
@@ -30,31 +36,39 @@ const resolveMediaSrc = (src?: string): string => {
 
 export const ReelComposition: React.FC<ReelProps> = ({
   videoSrc,
+  cutoutVideoSrc,
   subtitles = [],
+  scenes = [],
+  transitions = [],
   overlays = [],
   zoomEvents = [],
   reframeEvents = [],
   mediaOverlays = [],
+  callouts = [],
+  waveform,
   audio,
+  color,
   captionStyle,
   progressBar,
   hook,
   title,
   highlightColor,
   infoCard,
+  subjectTracking,
 }) => {
   const frame = useCurrentFrame();
   const { durationInFrames, fps } = useVideoConfig();
 
-  // 1. DYNAMIC SMART CAMERA CHOREOGRAPHY (Punch-ins, Slow Push/Pull, Snap, Shake)
+  // 1. SMART CAMERA RIG CHOREOGRAPHY
   let currentZoom = 1.0;
   let originX = "50%";
   let originY = "40%";
-  let shakeOffset = 0;
 
   if (zoomEvents && zoomEvents.length > 0) {
     for (const z of zoomEvents) {
-      const zEnd = z.startFrame + (z.durationInFrames || (z.endFrame ? z.endFrame - z.startFrame : 60));
+      const zEnd =
+        z.startFrame +
+        (z.durationInFrames || (z.endFrame ? z.endFrame - z.startFrame : 60));
       if (frame >= z.startFrame && frame <= zEnd) {
         originX = z.originX || "50%";
         originY = z.originY || "40%";
@@ -64,26 +78,19 @@ export const ReelComposition: React.FC<ReelProps> = ({
         const mode = z.type || "punch_in";
 
         if (mode === "slow_zoom_in" || mode === "slow_zoom") {
-          // Slow cinematic push-in
           currentZoom = interpolate(progress, [0, 1], [1.0, targetScale], {
             extrapolateLeft: "clamp",
             extrapolateRight: "clamp",
           });
         } else if (mode === "slow_zoom_out") {
-          // Slow cinematic pull-out
           currentZoom = interpolate(progress, [0, 1], [targetScale, 1.0], {
             extrapolateLeft: "clamp",
             extrapolateRight: "clamp",
           });
         } else if (mode === "snap") {
-          // Hard instant punch cut
           currentZoom = targetScale;
-        } else if (mode === "shake") {
-          // High-energy impact shake
-          currentZoom = targetScale;
-          shakeOffset = Math.sin((frame - z.startFrame) * 1.5) * 8 * (1 - progress);
         } else {
-          // Default: Spring Punch-in with smooth return
+          // Spring Punch-in
           const entranceFrames = Math.min(12, Math.floor(eventDuration * 0.25));
           const exitFrames = Math.min(12, Math.floor(eventDuration * 0.25));
           const holdEnd = zEnd - exitFrames;
@@ -108,39 +115,19 @@ export const ReelComposition: React.FC<ReelProps> = ({
         break;
       }
     }
-  } else {
-    // Subtle baseline ambient breathing zoom (1.00 -> 1.03 over full duration)
-    currentZoom = interpolate(frame, [0, durationInFrames], [1.0, 1.03], {
-      extrapolateRight: "clamp",
-    });
   }
 
-  // 2. AUTO-REFRAME / SUBJECT CENTERING
-  let focalX = 50;
-  let focalY = 40;
-  if (reframeEvents && reframeEvents.length > 0) {
-    for (const r of reframeEvents) {
-      if (frame >= r.startFrame && frame <= r.startFrame + r.durationInFrames) {
-        focalX = r.centerX * 100;
-        focalY = r.centerY * 100;
-        break;
-      }
-    }
-  }
-
-  // 3. AUDIO ENGINE & DUCKING CALCULATION
-  // Check if current frame coincides with active speech in subtitles
+  // 2. AUDIO ENGINE & DUCKING
   const isSpeaking = subtitles.some(
     (sub) => frame >= sub.startFrame && frame <= sub.endFrame
   );
-
-  const bgmBaseVol = audio?.bgmVolume ?? 0.15;
-  const duckVol = audio?.duckingVolume ?? 0.04;
+  const bgmBaseVol = audio?.bgmVolume ?? 0.14;
+  const duckVol = audio?.duckingVolume ?? audio?.duckedVolume ?? 0.035;
   const bgmVolume = isSpeaking ? duckVol : bgmBaseVol;
 
-  // 4. ANIMATED HOOK / TITLE SEQUENCE (First 75 frames if enabled)
+  // 3. HOOK BANNER
   const isHookActive = hook?.enabled !== false && (hook?.title || title);
-  const hookDuration = hook?.durationInFrames || 75;
+  const hookDuration = hook?.durationInFrames || 85;
   const hookVisible = isHookActive && frame < hookDuration;
 
   let hookOpacity = 0;
@@ -161,8 +148,8 @@ export const ReelComposition: React.FC<ReelProps> = ({
       interpolate(hookEntrance, [0, 1], [-80, 0]) * hookExitProgress;
   }
 
-  // Backward compatibility: Convert single legacy infoCard to overlays format if provided
-  const combinedOverlays = [...overlays];
+  // 4. OVERLAYS ADAPTER (Legacy backwards compatibility)
+  const combinedOverlays = [...(overlays || [])];
   if (infoCard && infoCard.enabled) {
     combinedOverlays.push({
       id: "legacy-info-card",
@@ -182,47 +169,25 @@ export const ReelComposition: React.FC<ReelProps> = ({
         overflow: "hidden",
       }}
     >
-      {/* 1. Main Talking-Head Video Layer with Smart Zoom & Reframe */}
-      {videoSrc ? (
-        <AbsoluteFill
-          style={{
-            transform: `scale(${currentZoom})`,
-            transformOrigin: `${originX} ${originY}`,
-          }}
-        >
-          <OffthreadVideo
-            src={resolveMediaSrc(videoSrc)}
-            style={{
-              width: "100%",
-              height: "100%",
-              objectFit: "cover",
-              objectPosition: `${focalX}% ${focalY}%`,
-            }}
-          />
-        </AbsoluteFill>
-      ) : (
-        <AbsoluteFill
-          style={{
-            background: "radial-gradient(circle, #1E1B4B 0%, #0F172A 100%)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <h1
-            style={{
-              color: "#FFFFFF",
-              fontSize: 64,
-              fontFamily: "'Cairo', system-ui, sans-serif",
-              textAlign: "center",
-            }}
-          >
-            🎬 Preview Placeholder
-          </h1>
-        </AbsoluteFill>
-      )}
+      {/* 1. SCENE ENGINE (Dynamic Layout Switcher) */}
+      <AbsoluteFill
+        style={{
+          transform: `scale(${currentZoom})`,
+          transformOrigin: `${originX} ${originY}`,
+        }}
+      >
+        <SceneRenderer
+          scenes={scenes}
+          videoSrc={videoSrc}
+          cutoutVideoSrc={cutoutVideoSrc}
+          subjectTracking={subjectTracking}
+        />
+      </AbsoluteFill>
 
-      {/* 2. Media / B-roll Overlays Layer & Visual Stickers */}
+      {/* 2. TRANSITIONS LAYER (GlitchSlice, ZoomCut, BlurWipe) */}
+      <TransitionRenderer transitions={transitions} />
+
+      {/* 3. MEDIA OVERLAYS / FLOATING STICKERS */}
       {mediaOverlays.map((media) => {
         const isMediaActive =
           frame >= media.startFrame &&
@@ -235,14 +200,19 @@ export const ReelComposition: React.FC<ReelProps> = ({
           config: { damping: 12, mass: 0.4, stiffness: 200 },
         });
 
-        // Compute positioning styles
-        const isPip = media.position === "top-right" || media.position === "top-left" || media.position === "bottom-right" || media.position === "bottom-left" || media.top !== undefined || media.right !== undefined;
-        
+        const isPip =
+          media.position === "top-right" ||
+          media.position === "top-left" ||
+          media.position === "bottom-right" ||
+          media.position === "bottom-left" ||
+          media.top !== undefined ||
+          media.right !== undefined;
+
         let positionStyle: React.CSSProperties = {
           position: "absolute",
           zIndex: 35,
           opacity: interpolate(mediaSpring, [0, 1], [0, 1]),
-          transform: `scale(${interpolate(mediaSpring, [0, 1], [0.8, 1])}) rotate(${interpolate(mediaSpring, [0, 1], [-8, 0])}deg)`,
+          transform: `scale(${interpolate(mediaSpring, [0, 1], [0.8, 1])})`,
         };
 
         if (media.position === "top-right" || (!media.position && media.right !== undefined)) {
@@ -259,122 +229,47 @@ export const ReelComposition: React.FC<ReelProps> = ({
             left: media.left ?? "6%",
             width: media.width ?? 320,
           };
-        } else if (media.position === "bottom-right") {
+        } else {
           positionStyle = {
             ...positionStyle,
-            bottom: media.bottom ?? "20%",
-            right: media.right ?? "6%",
-            width: media.width ?? 300,
+            top: "25%",
+            left: "10%",
+            right: "10%",
           };
-        } else {
-          // Centered full overlay
-          return (
-            <AbsoluteFill
-              key={media.id}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                padding: 40,
-                opacity: interpolate(mediaSpring, [0, 1], [0, 1]),
-                transform: `scale(${interpolate(mediaSpring, [0, 1], [0.9, 1])})`,
-                zIndex: 30,
-              }}
-            >
-              {media.type === "video" ? (
-                <OffthreadVideo
-                  src={resolveMediaSrc(media.src)}
-                  style={{
-                    width: "90%",
-                    maxHeight: "70%",
-                    borderRadius: media.borderRadius || 24,
-                    boxShadow: "0 20px 60px rgba(0,0,0,0.8)",
-                    border: "2px solid rgba(255,255,255,0.2)",
-                    objectFit: "contain",
-                  }}
-                />
-              ) : (
-                <Img
-                  src={resolveMediaSrc(media.src)}
-                  style={{
-                    width: "90%",
-                    maxHeight: "70%",
-                    borderRadius: media.borderRadius || 24,
-                    boxShadow: "0 20px 60px rgba(0,0,0,0.8)",
-                    border: "2px solid rgba(255,255,255,0.2)",
-                    objectFit: "contain",
-                  }}
-                />
-              )}
-            </AbsoluteFill>
-          );
         }
 
         return (
           <div key={media.id} style={positionStyle}>
-            <div
+            <Img
+              src={resolveMediaSrc(media.src)}
               style={{
-                position: "relative",
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                filter: "drop-shadow(0 15px 35px rgba(0, 0, 0, 0.7))",
+                width: "100%",
+                height: "auto",
+                borderRadius: media.borderRadius || 24,
+                boxShadow: "0 15px 40px rgba(0,0,0,0.75)",
               }}
-            >
-              <Img
-                src={resolveMediaSrc(media.src)}
-                style={{
-                  width: "100%",
-                  height: "auto",
-                  borderRadius: media.borderRadius || 24,
-                  objectFit: "contain",
-                }}
-              />
-              {media.label && (
-                <div
-                  style={{
-                    marginTop: 10,
-                    padding: "6px 16px",
-                    background: "rgba(15, 23, 42, 0.85)",
-                    backdropFilter: "blur(12px)",
-                    borderRadius: 14,
-                    border: "1px solid rgba(255, 230, 0, 0.4)",
-                    color: "#FFE600",
-                    fontSize: 22,
-                    fontWeight: 800,
-                    fontFamily: "'Cairo', 'Tajawal', sans-serif",
-                    textAlign: "center",
-                    boxShadow: "0 4px 15px rgba(0,0,0,0.5)",
-                  }}
-                >
-                  {media.label}
-                </div>
-              )}
-            </div>
+            />
           </div>
         );
       })}
 
-      {/* 3. Cinematic Contrast Vignette */}
-      <AbsoluteFill
-        style={{
-          background:
-            "linear-gradient(180deg, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0) 25%, rgba(0,0,0,0) 65%, rgba(0,0,0,0.88) 100%)",
-          pointerEvents: "none",
-        }}
-      />
+      {/* 4. CALLOUTS & INTERACTIVE ARROWS */}
+      <Callouts callouts={callouts} />
 
-      {/* 4. Optional Top Progress Bar */}
+      {/* 5. AUDIO VISUALIZER WAVEFORM */}
+      <Waveform config={waveform} />
+
+      {/* 6. TOP PROGRESS BAR */}
       <ProgressBar config={progressBar} />
 
-      {/* 5. Hook / Title Banner Overlay */}
+      {/* 7. HOOK BANNER OVERLAY */}
       {hookVisible && (
         <div
           style={{
             position: "absolute",
             top: 140,
-            left: 40,
-            right: 40,
+            left: 44,
+            right: 44,
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
@@ -387,48 +282,39 @@ export const ReelComposition: React.FC<ReelProps> = ({
         >
           <div
             style={{
-              background:
-                "linear-gradient(135deg, rgba(255, 230, 0, 0.95) 0%, rgba(255, 170, 0, 0.95) 100%)",
-              color: "#000000",
-              padding: "16px 36px",
-              borderRadius: "22px",
+              background: "rgba(10, 15, 25, 0.85)",
+              backdropFilter: "blur(20px)",
+              border: "1.5px solid rgba(255, 230, 0, 0.6)",
+              color: "#FFE600",
+              padding: "14px 36px",
+              borderRadius: "24px",
               fontWeight: 900,
-              fontSize: 38,
+              fontSize: 34,
               fontFamily: "'Cairo', 'Tajawal', sans-serif",
-              boxShadow: "0 15px 40px rgba(255, 230, 0, 0.5)",
+              boxShadow: "0 15px 40px rgba(0, 0, 0, 0.7), 0 0 25px rgba(255, 230, 0, 0.25)",
               textAlign: "center",
+              letterSpacing: "0.5px",
             }}
           >
-            {hook?.title || title}
+            {hook?.title && !hook.title.includes("????") ? hook.title : (subtitles[0]?.text || "ذكاء اصطناعي")}
           </div>
-          {hook?.subtitle && (
-            <div
-              style={{
-                color: "#FFFFFF",
-                fontSize: 24,
-                fontWeight: 700,
-                marginTop: 8,
-                textShadow: "0 2px 10px rgba(0,0,0,0.9)",
-                fontFamily: "'Cairo', 'Tajawal', sans-serif",
-              }}
-            >
-              {hook.subtitle}
-            </div>
-          )}
         </div>
       )}
 
-      {/* 6. Multi-Overlay Timeline (Cards, Quotes, Stats, Bullet lists, Code) */}
+      {/* 8. OVERLAYS TIMELINE (Cards, Quotes, Bullets, Code) */}
       <Overlays overlays={combinedOverlays} />
 
-      {/* 7. RTL Kinetic Subtitles */}
+      {/* 9. RTL KINETIC SUBTITLES */}
       <Subtitles
         subtitles={subtitles}
         styleConfig={captionStyle}
         highlightColor={highlightColor}
       />
 
-      {/* 8. Background Music Layer with Automatic Ducking */}
+      {/* 10. COLOR TREATMENT & VIGNETTE */}
+      <ColorTreatment config={color} />
+
+      {/* 11. BGM & SFX ENGINE */}
       {audio?.bgmSrc && (
         <Audio
           src={resolveMediaSrc(audio.bgmSrc)}
@@ -437,18 +323,15 @@ export const ReelComposition: React.FC<ReelProps> = ({
         />
       )}
 
-      {/* 9. Sound Effects (SFX) Triggers */}
       {audio?.sfxEvents?.map((sfx, idx) => {
-        if (frame === sfx.startFrame) {
-          return (
+        return (
+          <Sequence key={`sfx-${idx}`} from={sfx.startFrame}>
             <Audio
-              key={idx}
-              src={sfx.src}
+              src={resolveMediaSrc(sfx.src)}
               volume={sfx.volume ?? 0.5}
             />
-          );
-        }
-        return null;
+          </Sequence>
+        );
       })}
     </AbsoluteFill>
   );
