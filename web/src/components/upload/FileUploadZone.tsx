@@ -31,8 +31,8 @@ export default function FileUploadZone() {
         clearInterval(fakeProgress);
         setUploadProgress(100);
 
-        const videoUrl = `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}${res.raw_video_url}`;
-        loadJob(res.job_id, videoUrl);
+        const videoUrl = `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}${res.rawUrl}`;
+        loadJob(res.jobId, videoUrl);
       } catch (e) {
         setError(e instanceof Error ? e.message : "Upload failed");
       } finally {

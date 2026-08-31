@@ -3,9 +3,11 @@ import type { EditPlanV3 } from "../../../src/types/schema";
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 export interface JobResponse {
-  job_id: string;
+  jobId: string;
   status: string;
-  raw_video_url: string;
+  rawUrl: string;
+  fps?: number;
+  durationSec?: number;
   before_video_url?: string;
   after_video_url?: string;
 }
