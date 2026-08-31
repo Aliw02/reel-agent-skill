@@ -1,6 +1,7 @@
 import React from "react";
 import { interpolate, spring, useCurrentFrame, useVideoConfig } from "remotion";
 import { OverlayItem } from "../types/schema";
+import { AnimatedCounter } from "../graphics/AnimatedCounter";
 
 interface OverlaysProps {
   overlays?: OverlayItem[];
@@ -170,54 +171,58 @@ const SingleOverlay: React.FC<SingleOverlayProps> = ({ item, frame, fps }) => {
           ...getThemeBackground(),
         }}
       >
-        {/* Stat Type */}
+        {/* Stat Type with Animated Counter or Static Value */}
         {type === "stat" && (
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              gap: 20,
-            }}
-          >
-            <div>
-              {title && (
-                <div
-                  style={{
-                    color: "rgba(255, 255, 255, 0.7)",
-                    fontSize: 26,
-                    fontWeight: 700,
-                    fontFamily: "'Cairo', 'Tajawal', sans-serif",
-                  }}
-                >
-                  {title}
-                </div>
-              )}
-              {statLabel && (
-                <div
-                  style={{
-                    color: "#FFFFFF",
-                    fontSize: 32,
-                    fontWeight: 800,
-                    fontFamily: "'Cairo', 'Tajawal', sans-serif",
-                  }}
-                >
-                  {statLabel}
-                </div>
-              )}
-            </div>
+          item.animatedCounter ? (
+            <AnimatedCounter config={item.animatedCounter} startFrame={startFrame} />
+          ) : (
             <div
               style={{
-                fontFamily: "system-ui, sans-serif",
-                fontSize: 64,
-                fontWeight: 900,
-                color: "#FFE600",
-                textShadow: "0 0 25px rgba(255, 230, 0, 0.6)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: 20,
               }}
             >
-              {statNumber}
+              <div>
+                {title && (
+                  <div
+                    style={{
+                      color: "rgba(255, 255, 255, 0.75)",
+                      fontSize: 26,
+                      fontWeight: 700,
+                      fontFamily: "'Cairo', 'Tajawal', sans-serif",
+                    }}
+                  >
+                    {title}
+                  </div>
+                )}
+                {statLabel && (
+                  <div
+                    style={{
+                      color: "#FFFFFF",
+                      fontSize: 32,
+                      fontWeight: 800,
+                      fontFamily: "'Cairo', 'Tajawal', sans-serif",
+                    }}
+                  >
+                    {statLabel}
+                  </div>
+                )}
+              </div>
+              <div
+                style={{
+                  fontFamily: "system-ui, 'Cairo', sans-serif",
+                  fontSize: 64,
+                  fontWeight: 900,
+                  color: "#FFE600",
+                  textShadow: "0 0 25px rgba(255, 230, 0, 0.6)",
+                }}
+              >
+                {statNumber}
+              </div>
             </div>
-          </div>
+          )
         )}
 
         {/* Quote Type */}

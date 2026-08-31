@@ -207,6 +207,7 @@ export interface OverlayItem {
   theme?: "glass" | "gradient" | "neon" | "minimal";
   codeSnippet?: string;
   codeLanguage?: string;
+  animatedCounter?: AnimatedCounterConfig;
 }
 
 export type ZoomEventType =
