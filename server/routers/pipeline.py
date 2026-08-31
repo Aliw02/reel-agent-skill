@@ -70,7 +70,7 @@ async def upload_job(
     return JobCreatedResponse(
         jobId=rec.job_id,
         status="created",
-        rawUrl=f"/api/jobs/{rec.job_id}/artifacts/{rec.raw_filename}",
+        rawUrl=f"/api/jobs/{rec.job_id}/raw/{rec.raw_filename}",
         fps=rec.fps,
         durationSec=rec.duration_sec,
     )
@@ -82,7 +82,7 @@ async def get_job(job_id: str) -> JobStatusResponse:
     return JobStatusResponse(
         jobId=rec.job_id,
         status="active",
-        rawUrl=f"/api/jobs/{rec.job_id}/artifacts/{rec.raw_filename}",
+        rawUrl=f"/api/jobs/{rec.job_id}/raw/{rec.raw_filename}",
         fps=rec.fps,
         durationSec=rec.duration_sec,
         stages=rec.stages,
@@ -245,3 +245,14 @@ async def get_artifact(job_id: str, name: str):
     if not os.path.exists(path):
         raise HTTPException(status_code=404, detail=f"Artifact '{name}' not found")
     return FileResponse(path, filename=name)
+
+
+@router.get("/jobs/{job_id}/raw/{name}")
+async def get_raw_video(job_id: str, name: str):
+    rec = _require_job(job_id)
+    if name != rec.raw_filename:
+        raise HTTPException(status_code=400, detail="Filename mismatch")
+    path = JobStore.get_raw_path(job_id)
+    if not os.path.exists(path):
+        raise HTTPException(status_code=404, detail="Raw video not found")
+    return FileResponse(path, media_type="video/mp4", filename=name)
