@@ -6,7 +6,7 @@ import type { ProviderModelOption } from "./ModelContextMenu";
 import { fetchCopilotModels, applyCopilotDraft } from "@/lib/api";
 
 interface AiCopilotDrawerProps {
-  jobId: string;
+  jobId: string | null;
   open: boolean;
   onClose: () => void;
 }
@@ -175,83 +175,99 @@ export default function AiCopilotDrawer({ jobId, open, onClose }: AiCopilotDrawe
         </button>
       </div>
 
-      <div className="px-4 py-2 border-b border-zinc-800 flex items-center gap-2 relative">
-        <span className="text-[10px] text-zinc-500 uppercase tracking-wider">Model</span>
-        <button
-          onClick={() => setShowModelMenu(!showModelMenu)}
-          className="text-xs text-zinc-300 bg-zinc-800 px-2 py-0.5 rounded hover:bg-zinc-700"
-        >
-          {selectedModel || "Select model"}
-        </button>
-        {showModelMenu && (
-          <ModelContextMenu
-            models={models}
-            selectedProvider={selectedProvider}
-            selectedModel={selectedModel}
-            onSelect={handleSelectModel}
-            onClose={() => setShowModelMenu(false)}
-          />
-        )}
-      </div>
-
-      <div className="flex-1 overflow-y-auto px-4 py-3">
-        {error && (
-          <div className="mb-2 px-2 py-1 text-xs bg-red-900/40 text-red-400 rounded">{error}</div>
-        )}
-        <LiveChangeFeed tokens={tokens} actions={actions} />
-      </div>
-
-      <div className="px-4 py-3 border-t border-zinc-700">
-        {(isStreaming || actions.length > 0) && (
-          <div className="flex gap-2 mb-2">
+      {!jobId ? (
+        <div className="flex-1 flex flex-col items-center justify-center px-6 text-center gap-3">
+          <svg className="w-10 h-10 text-zinc-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+          </svg>
+          <p className="text-sm text-zinc-400">
+            Upload a video to start a session with the Director Copilot.
+          </p>
+          <p className="text-xs text-zinc-600">
+            The copilot helps you refine edits, adjust captions, and direct motion design in real time.
+          </p>
+        </div>
+      ) : (
+        <>
+          <div className="px-4 py-2 border-b border-zinc-800 flex items-center gap-2 relative">
+            <span className="text-[10px] text-zinc-500 uppercase tracking-wider">Model</span>
             <button
-              onClick={handleApply}
-              disabled={actions.length === 0}
-              className="flex-1 text-xs px-2 py-1.5 bg-emerald-600 text-white rounded disabled:opacity-40 hover:bg-emerald-500"
+              onClick={() => setShowModelMenu(!showModelMenu)}
+              className="text-xs text-zinc-300 bg-zinc-800 px-2 py-0.5 rounded hover:bg-zinc-700"
             >
-              Apply
+              {selectedModel || "Select model"}
             </button>
-            <button
-              onClick={handleDiscard}
-              className="flex-1 text-xs px-2 py-1.5 bg-zinc-700 text-zinc-300 rounded hover:bg-zinc-600"
-            >
-              Discard
-            </button>
-            {isStreaming && (
-              <button
-                onClick={handleCancel}
-                className="text-xs px-2 py-1.5 bg-red-800 text-white rounded hover:bg-red-700"
-              >
-                Cancel
-              </button>
+            {showModelMenu && (
+              <ModelContextMenu
+                models={models}
+                selectedProvider={selectedProvider}
+                selectedModel={selectedModel}
+                onSelect={handleSelectModel}
+                onClose={() => setShowModelMenu(false)}
+              />
             )}
           </div>
-        )}
-        <div className="flex gap-2">
-          <textarea
-            ref={inputRef}
-            value={prompt}
-            onChange={(e) => setPrompt(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                handleStart();
-              }
-            }}
-            placeholder="Describe the edit you want..."
-            rows={2}
-            className="flex-1 bg-zinc-800 border border-zinc-600 rounded px-3 py-2 text-sm text-zinc-200 placeholder-zinc-500 outline-none focus:border-zinc-400 resize-none"
-            disabled={isStreaming}
-          />
-          <button
-            onClick={handleStart}
-            disabled={!prompt.trim() || isStreaming}
-            className="self-end px-3 py-2 bg-blue-600 text-white text-sm rounded disabled:opacity-40 hover:bg-blue-500"
-          >
-            Send
-          </button>
-        </div>
-      </div>
+
+          <div className="flex-1 overflow-y-auto px-4 py-3">
+            {error && (
+              <div className="mb-2 px-2 py-1 text-xs bg-red-900/40 text-red-400 rounded">{error}</div>
+            )}
+            <LiveChangeFeed tokens={tokens} actions={actions} />
+          </div>
+
+          <div className="px-4 py-3 border-t border-zinc-700">
+            {(isStreaming || actions.length > 0) && (
+              <div className="flex gap-2 mb-2">
+                <button
+                  onClick={handleApply}
+                  disabled={actions.length === 0}
+                  className="flex-1 text-xs px-2 py-1.5 bg-emerald-600 text-white rounded disabled:opacity-40 hover:bg-emerald-500"
+                >
+                  Apply
+                </button>
+                <button
+                  onClick={handleDiscard}
+                  className="flex-1 text-xs px-2 py-1.5 bg-zinc-700 text-zinc-300 rounded hover:bg-zinc-600"
+                >
+                  Discard
+                </button>
+                {isStreaming && (
+                  <button
+                    onClick={handleCancel}
+                    className="text-xs px-2 py-1.5 bg-red-800 text-white rounded hover:bg-red-700"
+                  >
+                    Cancel
+                  </button>
+                )}
+              </div>
+            )}
+            <div className="flex gap-2">
+              <textarea
+                ref={inputRef}
+                value={prompt}
+                onChange={(e) => setPrompt(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    handleStart();
+                  }
+                }}
+                placeholder="Describe the edit you want..."
+                rows={2}
+                className="flex-1 bg-zinc-800 border border-zinc-600 rounded px-3 py-2 text-sm text-zinc-200 placeholder-zinc-500 outline-none focus:border-zinc-400 resize-none"
+                disabled={isStreaming}
+              />
+              <button
+                onClick={handleStart}
+                disabled={!prompt.trim() || isStreaming}
+                className="self-end px-3 py-2 bg-blue-600 text-white text-sm rounded disabled:opacity-40 hover:bg-blue-500"
+              >
+                Send
+              </button>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }
