@@ -48,10 +48,11 @@ export async function trimJob(
   jobId: string,
   silenceThresholdDb: number
 ): Promise<{ before_duration_s: number; after_duration_s: number; removed_s: number }> {
+  const form = new FormData();
+  form.append("threshold_db", String(silenceThresholdDb));
   const res = await fetch(`${API_BASE}/api/jobs/${jobId}/trim`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ silence_threshold_db: silenceThresholdDb }),
+    body: form,
   });
   if (!res.ok) throw new Error(`Failed to trim job: ${res.statusText}`);
   return res.json();

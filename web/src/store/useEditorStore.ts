@@ -121,7 +121,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     set({
       jobId,
       rawVideoUrl,
-      beforeVideoUrl: null,
+      beforeVideoUrl: rawVideoUrl,
       afterVideoUrl: null,
       activeStage: 1,
       stageStatus: defaultStageStatus(),

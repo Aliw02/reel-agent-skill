@@ -47,8 +47,16 @@ class OpenCodeCatalog:
             pid = provider.get("id", "")
             if pid not in connected_set:
                 continue
-            models: List[Dict[str, Any]] = provider.get("models", [])
-            for model in models:
+            models_raw = provider.get("models", {})
+            if isinstance(models_raw, dict):
+                models_list = list(models_raw.values())
+            elif isinstance(models_raw, list):
+                models_list = models_raw
+            else:
+                models_list = []
+            for model in models_list:
+                if isinstance(model, str):
+                    continue
                 mid = model.get("id", "")
                 display = model.get("name") or f"{provider.get('name', pid)} / {mid}"
                 results.append(
