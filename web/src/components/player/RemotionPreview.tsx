@@ -152,7 +152,7 @@ export const RemotionPreview: React.FC<RemotionPreviewProps> = ({
   }
 
   return (
-    <div className={`relative ${className || ""}`} style={{ aspectRatio: "9/16", maxHeight: "100%" }}>
+    <div className={`relative w-full h-full ${className || ""}`}>
       {/* Remotion After Composition */}
       <div className="absolute inset-0">
         <Player

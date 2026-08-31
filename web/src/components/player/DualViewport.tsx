@@ -10,27 +10,8 @@ interface DualViewportProps {
 }
 
 export const DualViewport: React.FC<DualViewportProps> = ({ className }) => {
-  const { viewMode, setViewMode, beforeVideoUrl, afterVideoUrl } =
-    useEditorStore();
+  const { viewMode, setViewMode, beforeVideoUrl } = useEditorStore();
   const containerRef = useRef<HTMLDivElement>(null);
-  const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
-
-  useEffect(() => {
-    const el = containerRef.current;
-    if (!el) return;
-
-    const observer = new ResizeObserver((entries) => {
-      for (const entry of entries) {
-        setContainerSize({
-          width: entry.contentRect.width,
-          height: entry.contentRect.height,
-        });
-      }
-    });
-
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, []);
 
   const handleViewModeChange = useCallback(
     (mode: ViewMode) => {
@@ -39,18 +20,13 @@ export const DualViewport: React.FC<DualViewportProps> = ({ className }) => {
     [setViewMode]
   );
 
-  // Calculate responsive 9:16 dimensions
-  const maxHeight = containerSize.height || 800;
-  const playerHeight = Math.min(maxHeight, maxHeight);
-  const playerWidth = playerHeight * (9 / 16);
-
   return (
     <div
       ref={containerRef}
-      className={`flex flex-col items-center gap-4 ${className || ""}`}
+      className={`flex flex-col items-center gap-4 h-full ${className || ""}`}
     >
       {/* View Mode Tabs */}
-      <div className="flex gap-1 rounded-lg bg-zinc-900 border border-zinc-800 p-1">
+      <div className="flex gap-1 rounded-lg bg-zinc-900 border border-zinc-800 p-1 shrink-0">
         {(["split", "slider", "after"] as const).map((mode) => (
           <button
             key={mode}
@@ -66,18 +42,13 @@ export const DualViewport: React.FC<DualViewportProps> = ({ className }) => {
         ))}
       </div>
 
-      {/* Player Container */}
+      {/* Player Container - fixed 9:16 aspect ratio, capped by parent height */}
       <div
-        className="relative rounded-lg overflow-hidden border border-zinc-800"
-        style={{
-          width: playerWidth,
-          height: playerHeight,
-          maxWidth: "100%",
-        }}
+        className="relative rounded-lg overflow-hidden border border-zinc-800 w-full max-w-md flex-1 min-h-0"
+        style={{ aspectRatio: "9/16", maxHeight: "calc(100vh - 160px)" }}
       >
         {viewMode === "split" && (
           <div className="flex w-full h-full">
-            {/* Before panel */}
             <div className="w-1/2 h-full overflow-hidden border-r border-zinc-700 relative">
               {beforeVideoUrl ? (
                 <video
@@ -96,7 +67,6 @@ export const DualViewport: React.FC<DualViewportProps> = ({ className }) => {
               </div>
             </div>
 
-            {/* After panel */}
             <div className="w-1/2 h-full overflow-hidden relative">
               <RemotionPreview className="w-full h-full" />
               <div className="absolute bottom-2 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded bg-black/60 text-[10px] text-zinc-400 uppercase tracking-wider">
