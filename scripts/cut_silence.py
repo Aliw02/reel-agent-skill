@@ -128,6 +128,8 @@ if __name__ == "__main__":
     parser.add_argument("--input", required=True, help="Input video file path")
     parser.add_argument("--output", required=True, help="Output trimmed video file path")
     parser.add_argument("--thresh", type=int, default=-30, help="Silence threshold in dB")
+    parser.add_argument("--min-silence", type=float, default=0.4, help="Minimum silence duration in seconds")
+    parser.add_argument("--padding", type=float, default=0.08, help="Speech padding in seconds")
     args = parser.parse_args()
     
-    cut_silence(args.input, args.output, silence_thresh_db=args.thresh)
+    cut_silence(args.input, args.output, silence_thresh_db=args.thresh, min_silence_sec=args.min_silence, padding=args.padding)

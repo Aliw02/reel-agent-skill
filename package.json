@@ -4,7 +4,8 @@
   "description": "Automated AI Video Editor for Reels and TikTok using Remotion and Whisper",
   "scripts": {
     "start": "remotion preview src/index.ts",
-    "build": "remotion render src/index.ts ReelComposition out/final_reel.mp4"
+    "build": "remotion render src/index.ts ReelComposition out/final_reel.mp4",
+    "studio": "python run_studio.py"
   },
   "dependencies": {
     "@remotion/cli": "^4.0.260",

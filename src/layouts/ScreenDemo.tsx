@@ -90,7 +90,7 @@ export const ScreenDemo: React.FC<ScreenDemoProps> = ({ scene, videoSrc }) => {
             boxShadow: "0 8px 25px rgba(0,0,0,0.6)",
           }}
         >
-          🔍 {scene.screenRoi.label}
+          Focus: {scene.screenRoi.label}
         </div>
       )}
     </AbsoluteFill>

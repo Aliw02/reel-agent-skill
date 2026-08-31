@@ -79,7 +79,7 @@ export const InfoCard: React.FC<{ config?: InfoCardProps }> = ({ config }) => {
             boxShadow: "0 4px 15px rgba(0, 255, 204, 0.4)",
           }}
         >
-          💡
+          Info
         </div>
 
         <div

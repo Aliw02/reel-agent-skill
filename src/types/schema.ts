@@ -207,6 +207,7 @@ export interface OverlayItem {
   theme?: "glass" | "gradient" | "neon" | "minimal";
   codeSnippet?: string;
   codeLanguage?: string;
+  animatedCounter?: AnimatedCounterConfig;
 }
 
 export type ZoomEventType =
@@ -354,6 +355,9 @@ export interface EditPlanV3 {
   // Backward compatibility
   highlightColor?: string;
   infoCard?: any;
+
+  // Browser-safe asset resolution
+  assetBaseUrl?: string;
 
   [key: string]: unknown;
 }

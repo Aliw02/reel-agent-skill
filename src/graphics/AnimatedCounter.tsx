@@ -4,9 +4,13 @@ import { AnimatedCounterConfig } from "../types/schema";
 
 interface AnimatedCounterProps {
   config: AnimatedCounterConfig;
+  startFrame?: number;
 }
 
-export const AnimatedCounter: React.FC<AnimatedCounterProps> = ({ config }) => {
+export const AnimatedCounter: React.FC<AnimatedCounterProps> = ({
+  config,
+  startFrame: propStartFrame,
+}) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
 
@@ -19,17 +23,23 @@ export const AnimatedCounter: React.FC<AnimatedCounterProps> = ({ config }) => {
     title,
     subtitle,
     beforeVal,
-    durationInFrames = 60,
+    durationInFrames = 40,
   } = config;
+
+  const effectiveStart =
+    propStartFrame !== undefined
+      ? propStartFrame
+      : (config as any).startFrame || 0;
+  const localFrame = Math.max(0, frame - effectiveStart);
 
   // Spring animation for the count-up
   const progress = spring({
-    frame,
+    frame: localFrame,
     fps,
     config: {
-      damping: 15,
-      mass: 0.8,
-      stiffness: 120,
+      damping: 14,
+      mass: 0.5,
+      stiffness: 140,
     },
   });
 
@@ -37,7 +47,7 @@ export const AnimatedCounter: React.FC<AnimatedCounterProps> = ({ config }) => {
   const formattedNumber = currentVal.toFixed(decimals);
 
   // Scale and glow bounce on entry
-  const scale = interpolate(progress, [0, 0.8, 1], [0.85, 1.04, 1.0]);
+  const scale = interpolate(progress, [0, 0.8, 1], [0.85, 1.05, 1.0]);
 
   return (
     <div

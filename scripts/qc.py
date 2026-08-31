@@ -156,8 +156,8 @@ def run_quality_control(
         height = int(v_stream.get("height", 0))
         
         if width != expected_width or height != expected_height:
-            report["warnings"].append(f"Resolution mismatch: got {width}x{height}, expected {expected_width}x{expected_height}.")
-            report["checks"]["resolution"] = f"WARN ({width}x{height})"
+            report["errors"].append(f"Resolution mismatch: got {width}x{height}, expected {expected_width}x{expected_height}.")
+            report["checks"]["resolution"] = f"FAIL ({width}x{height})"
         else:
             report["checks"]["resolution"] = f"PASS ({width}x{height})"
             
@@ -167,8 +167,12 @@ def run_quality_control(
             actual_fps = round(num / den) if den > 0 else 0
         else:
             actual_fps = round(float(r_fps_str))
-            
-        report["checks"]["fps"] = f"PASS ({actual_fps} fps)"
+
+        if actual_fps != expected_fps:
+            report["errors"].append(f"FPS mismatch: got {actual_fps}, expected {expected_fps}.")
+            report["checks"]["fps"] = f"FAIL ({actual_fps} fps)"
+        else:
+            report["checks"]["fps"] = f"PASS ({actual_fps} fps)"
         report["videoCodec"] = v_stream.get("codec_name")
 
     # 4. Audio stream checks
