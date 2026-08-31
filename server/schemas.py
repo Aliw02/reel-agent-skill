@@ -98,3 +98,75 @@ class PlanResponse(BaseModel):
 
 class ErrorResponse(BaseModel):
     detail: str
+
+
+# --- Copilot schemas ---
+
+
+class CopilotAction(BaseModel):
+    type: str
+    id: Optional[int] = None
+    title: Optional[str] = None
+    text: Optional[str] = None
+    translation: Optional[str] = None
+    subtitle: Optional[str] = None
+
+    class Config:
+        extra = "allow"
+
+
+class CopilotTokenEvent(BaseModel):
+    event: str = "token"
+    text: str
+
+
+class CopilotActionEvent(BaseModel):
+    event: str = "action"
+    action: CopilotAction
+
+
+class CopilotDraftEvent(BaseModel):
+    event: str = "draft"
+    actions: List[CopilotAction]
+
+
+class CopilotDoneEvent(BaseModel):
+    event: str = "done"
+
+
+class CopilotErrorEvent(BaseModel):
+    event: str = "error"
+    detail: str
+
+
+class CopilotMessage(BaseModel):
+    message: str
+
+
+class CopilotApplyRequest(BaseModel):
+    base_version: str = Field(alias="baseVersion")
+
+    class Config:
+        populate_by_name = True
+
+
+class CopilotModelRequest(BaseModel):
+    provider_id: str = Field(alias="providerID")
+    model_id: str = Field(alias="modelID")
+
+    class Config:
+        populate_by_name = True
+
+
+class ProviderModel(BaseModel):
+    provider_id: str = Field(alias="providerID")
+    model_id: str = Field(alias="modelID")
+    display_name: str = Field(alias="displayName")
+    provider_name: str = Field(default="", alias="providerName")
+
+    class Config:
+        populate_by_name = True
+
+
+class ProviderListResponse(BaseModel):
+    models: List[ProviderModel]

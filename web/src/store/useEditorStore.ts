@@ -62,6 +62,9 @@ export interface EditorState {
   copilotTokens: string[];
   copilotActions: CopilotAction[];
   isProcessing: boolean;
+  isStreaming: boolean;
+  selectedProvider: string;
+  selectedModel: string;
   viewMode: ViewMode;
   renderResult: RenderResult | null;
   masterResult: MasterResult | null;
@@ -84,6 +87,11 @@ export interface EditorState {
   setMasterResult: (result: MasterResult | null) => void;
   setQcReport: (report: Record<string, unknown> | null) => void;
   resetJob: () => void;
+  setCopilotTokens: (tokens: string[]) => void;
+  appendCopilotToken: (token: string) => void;
+  clearCopilot: () => void;
+  setCopilotModel: (provider: string, model: string) => void;
+  setIsStreaming: (streaming: boolean) => void;
 }
 
 export const useEditorStore = create<EditorState>((set, get) => ({
@@ -101,6 +109,9 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   copilotTokens: [],
   copilotActions: [],
   isProcessing: false,
+  isStreaming: false,
+  selectedProvider: "",
+  selectedModel: "",
   viewMode: "split",
   renderResult: null,
   masterResult: null,
@@ -122,6 +133,9 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       copilotTokens: [],
       copilotActions: [],
       isProcessing: false,
+      isStreaming: false,
+      selectedProvider: "",
+      selectedModel: "",
       viewMode: "split",
       renderResult: null,
       masterResult: null,
@@ -268,10 +282,26 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       copilotTokens: [],
       copilotActions: [],
       isProcessing: false,
+      isStreaming: false,
+      selectedProvider: "",
+      selectedModel: "",
       viewMode: "split",
       renderResult: null,
       masterResult: null,
       qcReport: null,
     });
   },
+
+  setCopilotTokens: (tokens) => set({ copilotTokens: tokens }),
+
+  appendCopilotToken: (token) =>
+    set((state) => ({ copilotTokens: [...state.copilotTokens, token] })),
+
+  clearCopilot: () =>
+    set({ copilotTokens: [], copilotActions: [], isStreaming: false }),
+
+  setCopilotModel: (provider, model) =>
+    set({ selectedProvider: provider, selectedModel: model }),
+
+  setIsStreaming: (streaming) => set({ isStreaming: streaming }),
 }));

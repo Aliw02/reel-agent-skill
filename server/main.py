@@ -7,6 +7,7 @@ from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 
 from .routers.pipeline import router as pipeline_router
+from .routers.chat import router as chat_router
 from .services.websocket_manager import manager
 
 app = FastAPI(title="AI Reel Studio", version="0.1.0")
@@ -23,6 +24,7 @@ app.add_middleware(
 )
 
 app.include_router(pipeline_router)
+app.include_router(chat_router)
 
 
 @app.websocket("/ws/jobs/{job_id}")

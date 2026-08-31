@@ -107,3 +107,47 @@ export async function masterJob(
   if (!res.ok) throw new Error(`Failed to master job: ${res.statusText}`);
   return res.json();
 }
+
+export interface ProviderModel {
+  providerID: string;
+  modelID: string;
+  displayName: string;
+  providerName: string;
+}
+
+export interface CopilotModelsResponse {
+  models: ProviderModel[];
+}
+
+export async function fetchCopilotModels(): Promise<CopilotModelsResponse> {
+  const res = await fetch(`${API_BASE}/api/opencode/models`);
+  if (!res.ok) throw new Error(`Failed to fetch models: ${res.statusText}`);
+  return res.json();
+}
+
+export async function applyCopilotDraft(
+  jobId: string,
+  baseVersion: string
+): Promise<{ status: string; version: string }> {
+  const res = await fetch(`${API_BASE}/api/jobs/${jobId}/copilot/apply`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ baseVersion }),
+  });
+  if (!res.ok) throw new Error(`Failed to apply draft: ${res.statusText}`);
+  return res.json();
+}
+
+export async function setCopilotModel(
+  jobId: string,
+  providerID: string,
+  modelID: string
+): Promise<{ status: string }> {
+  const res = await fetch(`${API_BASE}/api/jobs/${jobId}/copilot/model`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ providerID, modelID }),
+  });
+  if (!res.ok) throw new Error(`Failed to set model: ${res.statusText}`);
+  return res.json();
+}
