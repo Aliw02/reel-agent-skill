@@ -42,6 +42,39 @@ export async function commitPlan(jobId: string, plan: EditPlanV3): Promise<void>
   if (!res.ok) throw new Error(`Failed to commit plan: ${res.statusText}`);
 }
 
+export async function trimJob(
+  jobId: string,
+  silenceThresholdDb: number
+): Promise<{ before_duration_s: number; after_duration_s: number; removed_s: number }> {
+  const res = await fetch(`${API_BASE}/api/jobs/${jobId}/trim`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ silence_threshold_db: silenceThresholdDb }),
+  });
+  if (!res.ok) throw new Error(`Failed to trim job: ${res.statusText}`);
+  return res.json();
+}
+
+export async function transcribeJob(jobId: string): Promise<void> {
+  const res = await fetch(`${API_BASE}/api/jobs/${jobId}/transcribe`, {
+    method: "POST",
+  });
+  if (!res.ok) throw new Error(`Failed to transcribe job: ${res.statusText}`);
+}
+
+export async function getPlan(jobId: string): Promise<import("../../../src/types/schema").EditPlanV3> {
+  const res = await fetch(`${API_BASE}/api/jobs/${jobId}/plan`);
+  if (!res.ok) throw new Error(`Failed to fetch plan: ${res.statusText}`);
+  return res.json();
+}
+
+export async function approveStageEndpoint(jobId: string, stage: number): Promise<void> {
+  const res = await fetch(`${API_BASE}/api/jobs/${jobId}/stages/${stage}/approve`, {
+    method: "POST",
+  });
+  if (!res.ok) throw new Error(`Failed to approve stage ${stage}: ${res.statusText}`);
+}
+
 export async function sendCopilotMessage(
   jobId: string,
   message: string
