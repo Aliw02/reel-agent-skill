@@ -74,9 +74,10 @@ def _start_opencode() -> subprocess.Popen[bytes] | None:
         _log("OpenCode autostart disabled; expecting external instance.")
         return None
     _log(f"Starting OpenCode on port {OPENCODE_PORT} ...")
+    opencode_bin = "opencode.cmd" if sys.platform == "win32" else "opencode"
     proc = subprocess.Popen(
         [
-            "opencode",
+            opencode_bin,
             "serve",
             "--hostname",
             "127.0.0.1",
