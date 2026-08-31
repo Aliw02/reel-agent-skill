@@ -2,8 +2,9 @@ import React from "react";
 import { Composition, CalculateMetadataFunction } from "remotion";
 import { ReelComposition } from "./ReelComposition";
 import { ReelProps } from "./types/schema";
+import currentEditPlan from "./edit_plan.json";
 
-const defaultV3Props: ReelProps = {
+const defaultV3Props: ReelProps = (currentEditPlan as unknown as ReelProps) || {
   version: "3.0.0",
   videoSrc: "trimmed.mp4",
   cutoutVideoSrc: "cutout.mp4",
@@ -26,7 +27,7 @@ const defaultV3Props: ReelProps = {
     activeWordColor: "#00FFCC",
     inactiveWordColor: "#FFFFFF",
     direction: "rtl",
-    positionBottom: 320,
+    positionBottom: 240,
     uppercase: false,
     animation: "bounce",
   },
@@ -108,7 +109,7 @@ const defaultV3Props: ReelProps = {
       startFrame: 0,
       endFrame: 85,
       text: "مرحباً بكم في محرر الفيديوهات الذكي V3",
-      emoji: "👋",
+      emoji: null,
       emphasisLevel: "high",
       words: [
         { word: "مرحباً", start: 0, end: 0.35, startFrame: 0, endFrame: 21, highlight: false },
@@ -123,7 +124,7 @@ const defaultV3Props: ReelProps = {
       startFrame: 90,
       endFrame: 205,
       text: "إنتاج محتوى احترافي بسرعة تفوق الخيال 🚀",
-      emoji: "🤖",
+      emoji: null,
       emphasisLevel: "punchline",
       words: [
         { word: "إنتاج", start: 1.5, end: 1.8, startFrame: 90, endFrame: 108, highlight: false },

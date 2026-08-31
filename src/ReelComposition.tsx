@@ -21,12 +21,15 @@ import { Subtitles } from "./components/Subtitles";
 import { Overlays } from "./components/Overlays";
 import { ProgressBar } from "./components/ProgressBar";
 
-const resolveMediaSrc = (src?: string): string => {
+const resolveMediaSrc = (src?: string, assetBaseUrl?: string): string => {
   if (!src) return "";
   if (src.startsWith("http://") || src.startsWith("https://")) {
     return src;
   }
   const filename = src.replace(/\\/g, "/").split("/").pop() || src;
+  if (assetBaseUrl) {
+    return assetBaseUrl + filename;
+  }
   try {
     return staticFile(filename);
   } catch (e) {
@@ -55,6 +58,7 @@ export const ReelComposition: React.FC<ReelProps> = ({
   highlightColor,
   infoCard,
   subjectTracking,
+  assetBaseUrl,
 }) => {
   const frame = useCurrentFrame();
   const { durationInFrames, fps } = useVideoConfig();
@@ -157,7 +161,7 @@ export const ReelComposition: React.FC<ReelProps> = ({
       startFrame: infoCard.startFrame,
       durationInFrames: infoCard.durationInFrames,
       text: infoCard.text,
-      icon: "💡",
+      icon: "Info",
       theme: "glass",
     });
   }
@@ -241,7 +245,7 @@ export const ReelComposition: React.FC<ReelProps> = ({
         return (
           <div key={media.id} style={positionStyle}>
             <Img
-              src={resolveMediaSrc(media.src)}
+              src={resolveMediaSrc(media.src, assetBaseUrl)}
               style={{
                 width: "100%",
                 height: "auto",
@@ -317,7 +321,7 @@ export const ReelComposition: React.FC<ReelProps> = ({
       {/* 11. BGM & SFX ENGINE */}
       {audio?.bgmSrc && (
         <Audio
-          src={resolveMediaSrc(audio.bgmSrc)}
+          src={resolveMediaSrc(audio.bgmSrc, assetBaseUrl)}
           volume={bgmVolume}
           loop
         />
@@ -327,7 +331,7 @@ export const ReelComposition: React.FC<ReelProps> = ({
         return (
           <Sequence key={`sfx-${idx}`} from={sfx.startFrame}>
             <Audio
-              src={resolveMediaSrc(sfx.src)}
+              src={resolveMediaSrc(sfx.src, assetBaseUrl)}
               volume={sfx.volume ?? 0.5}
             />
           </Sequence>

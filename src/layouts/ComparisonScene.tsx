@@ -81,7 +81,7 @@ export const ComparisonScene: React.FC<ComparisonSceneProps> = ({
           zIndex: 20,
         }}
       >
-        مقارنة النتائج والخيارات ⚖️
+        مقارنة النتائج والخيارات
       </div>
 
       {/* 3. Side-by-Side Comparison Container */}
@@ -126,7 +126,7 @@ export const ComparisonScene: React.FC<ComparisonSceneProps> = ({
               marginBottom: 20,
             }}
           >
-            ❌ المونتاج التقليدي
+            المونتاج التقليدي
           </div>
           <div
             style={{
@@ -170,7 +170,7 @@ export const ComparisonScene: React.FC<ComparisonSceneProps> = ({
               marginBottom: 20,
             }}
           >
-            ⚡ الذكاء الاصطناعي V3
+            الذكاء الاصطناعي V3
           </div>
           <div
             style={{

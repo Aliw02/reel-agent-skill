@@ -36,7 +36,7 @@ export const Subtitles: React.FC<SubtitlesProps> = ({
   const highlightColor =
     styleConfig?.highlightColor || legacyHighlightColor || "#FFE600";
   const inactiveColor = styleConfig?.inactiveWordColor || "#FFFFFF";
-  const positionBottom = styleConfig?.positionBottom || 340;
+  const positionBottom = styleConfig?.positionBottom || 240;
   const isArabic = direction === "rtl";
 
   // Pop-in spring animation for the chunk (Frame-driven, deterministic)

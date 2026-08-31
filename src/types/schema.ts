@@ -355,6 +355,9 @@ export interface EditPlanV3 {
   highlightColor?: string;
   infoCard?: any;
 
+  // Browser-safe asset resolution
+  assetBaseUrl?: string;
+
   [key: string]: unknown;
 }
 
