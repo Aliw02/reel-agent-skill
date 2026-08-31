@@ -34,6 +34,8 @@ def _wait_for_url(url: str, timeout: float = 30.0, interval: float = 0.5) -> boo
                     return True
             except httpx.HTTPError:
                 pass
+            except Exception:
+                pass
             time.sleep(interval)
     return False
 
@@ -102,7 +104,7 @@ def _verify_opencode() -> bool:
 def _verify_port(label: str, port: int) -> bool:
     url = f"http://127.0.0.1:{port}"
     _log(f"Verifying {label} at {url} ...")
-    ok = _wait_for_url(url, timeout=30.0)
+    ok = _wait_for_url(url, timeout=120.0)
     if ok:
         _log(f"{label} is up on port {port}.")
     else:
