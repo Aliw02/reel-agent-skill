@@ -88,11 +88,11 @@ export const DualViewport: React.FC<DualViewportProps> = ({ className }) => {
                 />
               ) : (
                 <div className="w-full h-full flex items-center justify-center bg-zinc-900 text-zinc-500 text-sm">
-                  Before
+                  Raw Footage
                 </div>
               )}
               <div className="absolute bottom-2 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded bg-black/60 text-[10px] text-zinc-400 uppercase tracking-wider">
-                Before
+                Raw Footage
               </div>
             </div>
 
@@ -100,7 +100,7 @@ export const DualViewport: React.FC<DualViewportProps> = ({ className }) => {
             <div className="w-1/2 h-full overflow-hidden relative">
               <RemotionPreview className="w-full h-full" />
               <div className="absolute bottom-2 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded bg-black/60 text-[10px] text-zinc-400 uppercase tracking-wider">
-                After
+                AI Edited Reel
               </div>
             </div>
           </div>

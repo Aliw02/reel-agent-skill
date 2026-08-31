@@ -1,106 +1,152 @@
-# 🎬 AI Reel Editor Pro (Reel Agent Skill)
+# AI Reel Studio
 
-<div align="center">
-
-![License](https://img.shields.io/badge/License-MIT-green.svg)
-![Python](https://img.shields.io/badge/Python-3.9+-blue.svg)
-![Remotion](https://img.shields.io/badge/Remotion-4.0+-purple.svg)
-![Whisper](https://img.shields.io/badge/Whisper-Faster--Whisper-orange.svg)
-
-**محرر ومخرج فيديو ذكي متكامل (AI Video Director & Editor) لإنتاج فيديوهات ريلز، تيك توك، ويوتيوب شورتس 9:16 تلقائياً بأعلى جودة.**
-<br />
-*Autonomous Silence Removal, Faster-Whisper Arabic Transcription, AI Director Edit Planning, Kinetic RTL Typography, Dynamic Punch Zooms, Multi-Overlay Timeline, Audio Ducking, and QC Validator.*
-
-</div>
+**Executive-grade AI video editing studio for producing 9:16 vertical reels (TikTok, Reels, Shorts).**
 
 ---
 
-## 🌟 الميزات الأساسية (Key Features)
+## Features
 
-- ✂️ **قص السكتات التلقائي الذكي (Speech-Aware Silence Trimming):** حذف فترات الصمت الميتة مع الحفاظ على وتيرة التنفس والوقفات الدرامية للمتحدث.
-- 🎙️ **تفريغ دقيق باللغة العربية واللهجات (Faster-Whisper):** يدعم اللهجة العراقية والعربية الفصحى مع توحيد الأحرف وتقطيع الجمل المعنوية حسب الوقفات وعلامات الترقيم.
-- 🧠 **المخرج الذكي (AI Director / Edit Planner):** تحليل دلالي للنص وتوليد خطة مونتاج متكاملة (`edit_plan.json`) تحدد نقاط الجذب (Hooks)، حركات الزووم التكتيكي، والبطاقات التوضيحية.
-- 📐 **طباعة عربية وتوافق RTL كامل:** دعم اتجاه اليمين لليسار (`direction: rtl`) وعزل النصوص ثنائية الاتجاه مع خطوط Google Fonts (Cairo, Tajawal, Readex Pro) و 5 ثيمات مظهرية (`box_glass`, `neon`, `bold_yellow`, `clean_white`, `cyber`).
-- 🔍 **زووم تفاعلي ذكي (Punch-in Smart Zooms):** حركات تقريب ديناميكية عند الكلمات المفتاحية والأرقام لرفع نسبة المشاهدة والتفاعل.
-- 🎴 **نظام الطبقات المتعددة (Multi-Overlay Timeline):** بطاقات زجاجية، اقتباسات، إحصائيات ونسب، قوائم نقطية، وأكواد برمجية.
-- 🎵 **محرك الصوت والـ Audio Ducking:** خفض صوت الموسيقى الخلفية تلقائياً أثناء كلام المتحدث ورفعها أثناء الوقفات.
-- 🛡️ **فحص الجودة الآلي (Quality Control Validator):** فحص تلقائي بعد الرندر للتأكد من أبعاد 1080x1920، عدد الفريمات، ومزامنة الصوت.
+- **Stage 1 — Silence Trim & Pacing:** Remove dead air with speech-aware silence detection, preserve natural breathing pauses.
+- **Stage 2 — Bilingual Captions:** Faster-Whisper Arabic transcription, dual-language subtitles (Arabic primary, English secondary), emoji-free validation.
+- **Stage 3 — Motion Design & 3D Layers:** Punch-in zooms, 3D floating cards, animated counters, spring camera effects via Remotion.
+- **Stage 4 — Audio Mastering & QC:** LUFS normalization, sound effects, automated QC validation (1080x1920, frame count, audio sync).
+- **AI Copilot:** Chat-driven edit assistant with live streaming, model selection, and one-click draft apply.
 
 ---
 
-## 🔄 مسار العمل (How the Workflow Works)
+## Installation
 
-```mermaid
-flowchart TD
-    A[📹 Raw Video فيديو خام] --> B[1. Auto-Cut Silence قص السكتات والوقفات]
-    B --> C[2. Whisper Transcription تفريغ الكلمات بدقة المللي ثانية]
-    C --> D[3. AI Director المخرج الذكي وتوليد edit_plan.json]
-    D --> E[4. Remotion Render رندر طبقات الفيديو بدقة 1080x1920 60FPS]
-    E --> F[5. QC Validator التحقق من جودة الفيديو]
-    F --> G[🎬 Final Reel فيديو ريلز احترافي جاهز للنشر]
-```
+### Prerequisites
 
----
+- [Python 3.9+](https://python.org)
+- [Node.js 18+](https://nodejs.org)
+- [FFmpeg](https://ffmpeg.org) (on PATH)
 
-## 🚀 التثبيت والتشغيل (Quick Start)
-
-### 1. المتطلبات (Prerequisites)
-- [Node.js](https://nodejs.org/) (v18+)
-- [Python](https://python.org/) (v3.9+)
-- [FFmpeg](https://ffmpeg.org/) (مثبت ومضاف للـ PATH)
-
-### 2. تثبيت الحزم (Installation)
+### Runtime dependencies
 
 ```bash
-# تثبيت حزم البايثون
 pip install -r requirements.txt
-
-# تثبيت حزم Remotion و React
-npm install
 ```
 
----
-
-## 💻 الاستخدام (Usage)
-
-### تشغيل البايبلاين بالكامل (Full Autonomous Pipeline):
+### Dev dependencies (for tests)
 
 ```bash
-python scripts/pipeline.py \
-  --input "path/to/raw_video.mp4" \
-  --output "output/final_reel.mp4" \
-  --title "سر الذكاء الاصطناعي" \
-  --theme "box_glass" \
-  --whisper-model "turbo" \
-  --lang "ar" \
-  --fps 60
+pip install -r requirements-dev.txt
 ```
 
-### خيارات الـ CLI المتاحة:
-- `--input`: مسار الفيديو الأصلي (إجباري).
-- `--output`: مسار حفظ الفيديو النهائي الممنتج (افتراضي: `output/final_reel.mp4`).
-- `--title`: عنوان الهوك الافتتاحي في بداية الفيديو.
-- `--theme`: نمط الخط والكابشنز (`box_glass`, `neon`, `bold_yellow`, `clean_white`, `cyber`).
-- `--whisper-model`: موديل Whisper (`base`, `small`, `medium`, `large-v3`, `turbo`).
-- `--lang`: لغة الصوت (`ar`, `en`, `auto`).
-- `--bgm`: مسار ملف موسيقى خلفية لتفعيل ميزة الخفض التلقائي أثناء الكلام (Audio Ducking).
-- `--fps`: معدل الإطارات (30 أو 60).
-- `--skip-qc`: تخطي مرحلة فحص الجودة بعد الرندر.
+### Web frontend dependencies
 
-### المعاينة المباشرة (Live Interactive Studio):
-لمعاينة الفيديو والطبقات والتفاعل مع التايملاين عبر المتصفح:
 ```bash
-npm start
+npm install --prefix web
 ```
 
 ---
 
-## 🤖 تكامل الـ AI Agents
+## Provider Connection
 
-مصمم ليعمل كـ **Skill** يستدعيه أي وكيل ذكاء اصطناعي (Antigravity, Claude, OpenCode, Codex):
-> *"سويلي ريلز احترافي للفيديو `input.mp4` بثيم النيون مع كروت توضيحية"*
+The studio connects to an OpenCode instance for AI model access.
+
+1. Start OpenCode (see below) or use an existing instance.
+2. Open the **Copilot** panel in the studio.
+3. Click **Connect** and enter the OpenCode base URL (default: `http://127.0.0.1:4096`).
+4. Select a provider and model from the dropdown.
+
+### Model Discovery
+
+Use the `/provider` endpoint or the Copilot model menu to list available providers and models from the connected OpenCode instance.
 
 ---
 
-## 📄 الترخيص (License)
-MIT License © [Aliw02](https://github.com/Aliw02)
+## Launching the Studio
+
+### One command (recommended)
+
+```bash
+python run_studio.py
+```
+
+Or via npm:
+
+```bash
+npm run studio
+```
+
+This starts:
+
+| Process | Port | URL |
+|---------|------|-----|
+| API (Uvicorn) | 8000 | `http://localhost:8000` |
+| Web (Next.js) | 3001 | `http://localhost:3001` |
+| OpenCode (optional) | 4096 | `http://127.0.0.1:4096` |
+
+### Optional: Auto-start OpenCode
+
+```bash
+STUDIO_OPENCODE_AUTOSTART=1 python run_studio.py
+```
+
+### Environment Variables
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `STUDIO_API_PORT` | `8000` | Backend API port |
+| `STUDIO_WEB_PORT` | `3001` | Next.js dev server port |
+| `STUDIO_OPENCODE_PORT` | `4096` | OpenCode port |
+| `STUDIO_OPENCODE_BASE_URL` | `http://127.0.0.1:4096` | OpenCode base URL |
+| `STUDIO_OPENCODE_AUTOSTART` | `0` | Set to `1` to launch OpenCode |
+
+---
+
+## Supported FPS
+
+| FPS | Use Case |
+|-----|----------|
+| 30  | Standard reels, faster rendering |
+| 60  | High-motion content, smooth zooms |
+
+---
+
+## Approval Workflow
+
+Each stage must be approved sequentially before the next unlocks:
+
+1. **Stage 1 (Trim):** Run trim, review before/after durations, approve.
+2. **Stage 2 (Captions):** Transcribe, review phrase bounds, edit translations, approve.
+3. **Stage 3 (Motion):** Render motion layers, preview, approve.
+4. **Stage 4 (Audio):** Master audio, review QC report, approve final reel.
+
+The **StageStepper** visual indicator shows locked/unlocked status. Later stages are disabled until their predecessor is approved.
+
+---
+
+## Development
+
+### Run unit tests
+
+```bash
+cd web && npm test
+```
+
+### Type-check
+
+```bash
+cd web && npm run typecheck
+```
+
+### Build
+
+```bash
+cd web && npm run build
+```
+
+### E2E tests (requires running studio)
+
+```bash
+cd web && npx playwright test
+```
+
+---
+
+## License
+
+MIT
