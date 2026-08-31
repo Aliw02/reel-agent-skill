@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { useEditorStore } from "@/store/useEditorStore";
 import { StageStepper } from "@/components/stages/StageStepper";
 import { DualViewport } from "@/components/player/DualViewport";
@@ -22,8 +22,18 @@ const STAGE_PANELS: Record<number, React.FC> = {
 export default function Home() {
   const activeStage = useEditorStore((s) => s.activeStage);
   const jobId = useEditorStore((s) => s.jobId);
+  const loadJob = useEditorStore((s) => s.loadJob);
 
   const [copilotOpen, setCopilotOpen] = useState(false);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const testJobId = params.get("jobId");
+    const testRawUrl = params.get("rawUrl");
+    if (testJobId && testRawUrl) {
+      loadJob(testJobId, testRawUrl);
+    }
+  }, [loadJob]);
 
   const handleStageClick = useCallback(
     (stage: number) => {
