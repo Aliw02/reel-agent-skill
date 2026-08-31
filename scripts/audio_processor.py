@@ -57,12 +57,49 @@ def normalize_voice_loudness(
     
     res = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     if res.returncode != 0:
-        print(f"⚠️ [Audio Master] Normalization warning, copying original audio: {res.stderr.decode('utf-8', 'ignore')[:200]}")
-        shutil.copy2(input_video, output_video)
-    else:
-        print(f"✨ [Audio Master] Mastered audio saved -> {output_video}")
-        
+        stderr_msg = res.stderr.decode('utf-8', 'ignore')[:500]
+        raise RuntimeError(
+            f"FFmpeg normalization failed (exit {res.returncode}): {stderr_msg}"
+        )
+
+    print(f"✨ [Audio Master] Mastered audio saved -> {output_video}")
     return output_video
+
+
+def measure_loudness(video_path: str) -> dict:
+    """Measures integrated loudness, true peak, and LRA of the audio track.
+
+    Returns a dict with keys: integrated_lufs, true_peak_db, lra.
+    Raises RuntimeError if ffprobe/loudnorm analysis fails.
+    """
+    ffmpeg_bin = get_ffmpeg_binary()
+
+    # Two-pass loudnorm measurement: first pass analyzes, second pass would apply.
+    # We run only the analysis pass (prints JSON stats to stderr).
+    cmd = [
+        ffmpeg_bin, "-i", video_path,
+        "-af", "loudnorm=print_format=json",
+        "-f", "null", "-"
+    ]
+    res = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    stderr_text = res.stderr.decode('utf-8', 'ignore')
+
+    # Parse the JSON block that loudnorm prints on the second-to-last brace group
+    import json
+    import re
+    json_match = re.search(r'\{[^{}]*"input_i"[^{}]*\}', stderr_text)
+    if not json_match:
+        raise RuntimeError(
+            f"Could not parse loudness stats from ffmpeg output: {stderr_text[:300]}"
+        )
+
+    stats = json.loads(json_match.group())
+    return {
+        "integrated_lufs": float(stats.get("input_i", 0)),
+        "true_peak_db": float(stats.get("input_tp", 0)),
+        "lra": float(stats.get("input_lra", 0)),
+    }
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Normalize Voice Loudness to -16 LUFS")

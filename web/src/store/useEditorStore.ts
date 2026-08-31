@@ -38,6 +38,15 @@ function defaultStageStatus(): Record<1 | 2 | 3 | 4, StageStatus> {
   return { 1: "pending", 2: "pending", 3: "pending", 4: "pending" };
 }
 
+export interface RenderResult {
+  videoUrl: string;
+  durationSec: number;
+}
+
+export interface MasterResult {
+  masteredVideoUrl: string;
+}
+
 export interface EditorState {
   jobId: string | null;
   rawVideoUrl: string | null;
@@ -54,6 +63,9 @@ export interface EditorState {
   copilotActions: CopilotAction[];
   isProcessing: boolean;
   viewMode: ViewMode;
+  renderResult: RenderResult | null;
+  masterResult: MasterResult | null;
+  qcReport: Record<string, unknown> | null;
 
   loadJob: (jobId: string, rawVideoUrl: string) => void;
   setViewMode: (mode: ViewMode) => void;
@@ -68,6 +80,9 @@ export interface EditorState {
   discardDraft: () => void;
   setStageStatus: (stage: number, status: StageStatus) => void;
   approveStage: (stage: number) => void;
+  setRenderResult: (result: RenderResult | null) => void;
+  setMasterResult: (result: MasterResult | null) => void;
+  setQcReport: (report: Record<string, unknown> | null) => void;
   resetJob: () => void;
 }
 
@@ -87,6 +102,9 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   copilotActions: [],
   isProcessing: false,
   viewMode: "split",
+  renderResult: null,
+  masterResult: null,
+  qcReport: null,
 
   loadJob: (jobId, rawVideoUrl) => {
     set({
@@ -105,6 +123,9 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       copilotActions: [],
       isProcessing: false,
       viewMode: "split",
+      renderResult: null,
+      masterResult: null,
+      qcReport: null,
     });
   },
 
@@ -219,6 +240,18 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     set({ currentPlaybackFrame: frame });
   },
 
+  setRenderResult: (result) => {
+    set({ renderResult: result });
+  },
+
+  setMasterResult: (result) => {
+    set({ masterResult: result });
+  },
+
+  setQcReport: (report) => {
+    set({ qcReport: report });
+  },
+
   resetJob: () => {
     set({
       jobId: null,
@@ -236,6 +269,9 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       copilotActions: [],
       isProcessing: false,
       viewMode: "split",
+      renderResult: null,
+      masterResult: null,
+      qcReport: null,
     });
   },
 }));

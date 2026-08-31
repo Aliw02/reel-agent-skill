@@ -87,3 +87,23 @@ export async function sendCopilotMessage(
   if (!res.ok) throw new Error(`Copilot request failed: ${res.statusText}`);
   return res.json();
 }
+
+export async function renderJob(
+  jobId: string
+): Promise<{ videoUrl: string; durationSec: number }> {
+  const res = await fetch(`${API_BASE}/api/jobs/${jobId}/render`, {
+    method: "POST",
+  });
+  if (!res.ok) throw new Error(`Failed to render job: ${res.statusText}`);
+  return res.json();
+}
+
+export async function masterJob(
+  jobId: string
+): Promise<{ masteredVideoUrl: string; qcReport?: Record<string, unknown> }> {
+  const res = await fetch(`${API_BASE}/api/jobs/${jobId}/master`, {
+    method: "POST",
+  });
+  if (!res.ok) throw new Error(`Failed to master job: ${res.statusText}`);
+  return res.json();
+}
