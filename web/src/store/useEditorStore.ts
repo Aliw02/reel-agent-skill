@@ -2,6 +2,7 @@ import { create } from "zustand";
 import type { EditPlanV3 } from "../../../src/types/schema";
 
 export type StageStatus = "pending" | "processing" | "ready" | "approved" | "failed";
+export type ViewMode = "split" | "slider" | "after";
 
 export interface CopilotAction {
   type: string;
@@ -52,8 +53,11 @@ export interface EditorState {
   copilotTokens: string[];
   copilotActions: CopilotAction[];
   isProcessing: boolean;
+  viewMode: ViewMode;
 
   loadJob: (jobId: string, rawVideoUrl: string) => void;
+  setViewMode: (mode: ViewMode) => void;
+  updatePlaybackFrame: (frame: number) => void;
   setPlan: (plan: EditPlanV3) => void;
   updateDraftPlan: (patch: Partial<EditPlanV3>) => void;
   applyCopilotAction: (action: CopilotAction) => void;
@@ -82,6 +86,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   copilotTokens: [],
   copilotActions: [],
   isProcessing: false,
+  viewMode: "split",
 
   loadJob: (jobId, rawVideoUrl) => {
     set({
@@ -99,6 +104,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       copilotTokens: [],
       copilotActions: [],
       isProcessing: false,
+      viewMode: "split",
     });
   },
 
@@ -205,6 +211,14 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     }
   },
 
+  setViewMode: (mode) => {
+    set({ viewMode: mode });
+  },
+
+  updatePlaybackFrame: (frame) => {
+    set({ currentPlaybackFrame: frame });
+  },
+
   resetJob: () => {
     set({
       jobId: null,
@@ -221,6 +235,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       copilotTokens: [],
       copilotActions: [],
       isProcessing: false,
+      viewMode: "split",
     });
   },
 }));
